@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: avurlerby/frontend:latest
+          image: avurlerby/frontend:4f1e4213e5ef04affe9b14c5b28cbc4a8c196756
           ports:
             - containerPort: 3000
           env:

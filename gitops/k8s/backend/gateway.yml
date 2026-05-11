@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: avurlerby/gateway:0cfcb69ec537ef9accd6f6db6f663a58dee9ab22
+          image: avurlerby/gateway:4f1e4213e5ef04affe9b14c5b28cbc4a8c196756
           ports:
             - containerPort: 3001
           env:
