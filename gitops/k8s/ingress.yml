@@ -4,25 +4,28 @@ metadata:
   name: boutique-ingress
   namespace: boutique
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/client-max-body-size: "10m"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
 spec:
   ingressClassName: nginx
   rules:
   - http:
       paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend
-            port:
-              number: 3000
-      - path: /api
+      - path: /api/(.*)
         pathType: Prefix
         backend:
           service:
             name: gateway
             port:
               number: 3001
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 3000
