@@ -5,6 +5,7 @@ namespace: boutique
 
 resources:
   - namespace.yml
+  - monitoring-namespace.yml
   - secrets.yml
   - k8s/database/configmap.yml
   - k8s/database/restore-job.yml
@@ -18,6 +19,8 @@ resources:
   - k8s/backend/user-service.yml
   - k8s/frontend/deployment.yml
   - k8s/grafana-dashboard.yml
+  - k8s/backend/service-monitor.yml
+  - prometheus-crds-app.yml
 
 configMapGenerator:
   - name: boutique-db-dump

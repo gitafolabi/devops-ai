@@ -4,7 +4,6 @@ metadata:
   name: postgres-init-scripts
   namespace: boutique
 data:
-  data:
   10-create-databases.sql: |
     CREATE DATABASE auth_db;
     CREATE DATABASE products_db;
