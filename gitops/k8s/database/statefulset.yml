@@ -46,7 +46,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: gp2
+        storageClassName: default
         resources:
           requests:
             storage: 10Gi
