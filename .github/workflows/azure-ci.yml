@@ -3,6 +3,9 @@ name: Boutique CI Pipeline Azure
 on:
   workflow_dispatch:
 
+env:
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
