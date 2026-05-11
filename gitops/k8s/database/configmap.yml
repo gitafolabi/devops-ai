@@ -11,15 +11,51 @@ data:
     CREATE DATABASE users_db;
 
   20-init-schema.sql: |
-    -- Example: Create tables in auth_db
     \c auth_db
     CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(100),
-      email VARCHAR(100) UNIQUE
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    \c products_db
+    CREATE TABLE IF NOT EXISTS products (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      price DECIMAL(10,2) NOT NULL,
+      category VARCHAR(100),
+      image_url VARCHAR(255),
+      stock_quantity INTEGER DEFAULT 0
+    );
+
+    \c users_db
+    CREATE TABLE IF NOT EXISTS profiles (
+      user_id UUID PRIMARY KEY,
+      address TEXT,
+      phone VARCHAR(20),
+      avatar_url VARCHAR(255)
+    );
+
+    \c orders_db
+    CREATE TABLE IF NOT EXISTS order_history (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL,
+      total_amount DECIMAL(10,2) NOT NULL,
+      status VARCHAR(50) DEFAULT 'completed',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
   quick-seed.sql: |
-    -- Seed data for demo
-    \c auth_db
-    INSERT INTO users(name, email) VALUES('Alice','alice@example.com'),('Bob','bob@example.com');
+    \c products_db
+    INSERT INTO products (name, description, price, category, image_url, stock_quantity) VALUES
+    ('Midnight Velvet Dress', 'Elegant evening wear for formal occasions.', 129.99, 'Women', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956', 50),
+    ('Urban Denim Jacket', 'Rugged and stylish denim jacket for everyday use.', 85.00, 'Men', 'https://images.unsplash.com/photo-1576905341935-4ef5090ea002', 30),
+    ('Classic Leather Boots', 'Durable hand-crafted leather boots.', 150.00, 'Shoes', 'https://images.unsplash.com/photo-1520639889410-d04196f73176', 20),
+    ('Silk Floral Scarf', 'Lightweight silk scarf with vibrant floral patterns.', 45.00, 'Accessories', 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d', 100),
+    ('Slim-Fit Chinos', 'Premium cotton chinos in olive green.', 65.00, 'Men', 'https://images.unsplash.com/photo-1473966968600-fa804b86862b', 40),
+    ('Cashmere Turtleneck', 'Ultra-soft grey cashmere sweater.', 120.00, 'Women', 'https://images.unsplash.com/photo-1583846717393-dc2412c95ed7', 25),
+    ('Aviator Sunglasses', 'Classic gold-rimmed polarized lenses.', 110.00, 'Accessories', 'https://images.unsplash.com/photo-1511499767390-903390e6fbc4', 60),
+    ('Minimalist Watch', 'Stainless steel watch with a black leather strap.', 180.00, 'Accessories', 'https://images.unsplash.com/photo-1524592094714-0f0654e20314', 15);

@@ -30,6 +30,8 @@ spec:
                   key: ORDERS_DB_URL
             - name: PRODUCTS_SERVICE_URL
               value: "http://product-service:3003"
+            - name: RABBIT_URL
+              value: "amqp://guest:guest@rabbitmq:5672"
 
 ---
 

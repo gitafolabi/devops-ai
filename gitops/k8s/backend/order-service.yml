@@ -32,6 +32,8 @@ spec:
               value: "http://auth:3002"
             - name: PRODUCT_SERVICE_URL
               value: "http://product-service:3003"
+            - name: RABBIT_URL
+              value: "amqp://guest:guest@rabbitmq:5672"
 
 ---
 
