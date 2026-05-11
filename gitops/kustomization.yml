@@ -5,7 +5,6 @@ namespace: boutique
 
 resources:
   - namespace.yml
-  - monitoring-namespace.yml
   - secrets.yml
   - k8s/database/configmap.yml
   - k8s/database/restore-job.yml
