@@ -13,6 +13,10 @@ spec:
       labels:
         app: orders
     spec:
+      initContainers:
+        - name: wait-for-rabbitmq
+          image: busybox:1.28
+          command: ['sh', '-c', "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done"]
       containers:
         - name: orders
           image: avurlerby/orders:7ff204922601b767a51fb600232cf087b39dba9f

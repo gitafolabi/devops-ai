@@ -23,17 +23,12 @@ data:
       first_name VARCHAR(255) NOT NULL,
       last_name VARCHAR(255) NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL,
       password_hash VARCHAR(255) NOT NULL,
       role VARCHAR(50) DEFAULT 'customer',
       subscribe_newsletter BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
-
-    ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS password VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
 
     \c products_db
     CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -72,11 +67,6 @@ data:
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
-
-    ALTER TABLE orders
-      ADD COLUMN IF NOT EXISTS shipping_address JSONB,
-      ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'pending',
-      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 
     CREATE TABLE IF NOT EXISTS order_items (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

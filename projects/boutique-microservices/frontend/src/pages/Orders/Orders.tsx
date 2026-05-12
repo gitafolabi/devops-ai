@@ -248,6 +248,7 @@ const Orders: React.FC = () => {
                           size="small"
                           startIcon={<DownloadIcon />}
                           variant="outlined"
+                          onClick={() => window.open(`/api/orders/${order.id}/invoice`, '_blank')}
                         >
                           Invoice
                         </Button>
