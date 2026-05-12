@@ -13,6 +13,8 @@ spec:
     helm:
       values: |
         controller:
+          admissionWebhooks:
+            enabled: false
           service:
             type: LoadBalancer
             annotations:
