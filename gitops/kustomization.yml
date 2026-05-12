@@ -33,3 +33,11 @@ configMapGenerator:
 
 generatorOptions:
   disableNameSuffixHash: true
+
+patches:
+  - target:
+      kind: Application
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: argocd
