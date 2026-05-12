@@ -20,6 +20,10 @@ spec:
         prometheusOperator:
           enabled: true
           manageCrds: true
+        nodeExporter:
+          enabled: false
+        kubeStateMetrics:
+          enabled: false
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: monitoring

@@ -1,6 +1,6 @@
-# DevOps + AIOps Series
+# DevOps Series
 
-> A full end-to-end DevOps project with AIOps integration — so you can connect the dots between how AI is helping automate DevOps tasks today.
+> A full end-to-end DevOps project — building the foundation for modern cloud engineering and scalable microservices.
 
 ---
 
@@ -8,7 +8,7 @@
 
 Hey everyone!
 
-Welcome to my DevOps + AI series where we build an end-to-end DevOps project with an AIOps integration.
+Welcome to my DevOps series where we build an end-to-end DevOps project.
 
 A lot of you have been asking: *"when are you going to share a full DevOps project?"*
 
@@ -19,10 +19,9 @@ In this series we will:
 - Build microservices locally
 - Use Claude and AI tools to assist development
 - Deploy everything step by step
-- Migrate the system to the cloud on AWS EKS
+- Migrate the system to the cloud (Multi-cloud: AWS EKS & Azure AKS)
 - Set up a full CI/CD pipeline with GitHub Actions
 - Implement GitOps workflows with ArgoCD
-- Integrate AIOps capabilities with AWS Bedrock
 
 By the end of this series, you won't just know tools — you'll understand how real DevOps systems are designed and deployed.
 
@@ -40,13 +39,16 @@ DevOps-Practice-Guide/
 │   ├── README.md                  # EKS deployment guide (Part 3)
 │   ├── boutique-microservices/    # The application (7 services)
 │   ├── Infrastructure/            # Terraform for AWS provisioning
-│   └── aiops-assistant/           # Bedrock Agent — Kira (Part 4)
 ├── gitops/
 │   ├── argo-cd.yml                # ArgoCD Application manifest
 │   ├── kustomization.yml          # Kustomize entry point
+│   ├── ingres-argo.yml            # Ingress Nginx (Azure Support)
+│   ├── cert-manager-argo.yml      # Cert-Manager Helm App
+│   ├── cert-manager-clusterissuer.yml # Let's Encrypt Issuer
 │   └── k8s/                       # All Kubernetes manifests
 └── .github/
-    └── workflows/ci.yml           # GitHub Actions CI pipeline
+    └── workflows/ci.yml           # GitHub Actions CI (AWS EKS)
+    └── workflows/azure-ci.yml     # GitHub Actions CI (Azure AKS)
 ```
 
 ---
@@ -109,19 +111,50 @@ Then we actually build the project. You'll see:
 - Infrastructure provisioning with Terraform
 - Observability with Prometheus and Grafana
 
+#### Key Features of this Implementation:
+
+**1. Azure-Optimized Ingress**
+The Ingress Nginx controller is configured specifically for Azure environments, utilizing:
+- Static Public IP integration via `azure-pip-name`.
+- Resource Group binding for the Load Balancer.
+- Admission webhooks disabled for stable GitOps bootstrapping.
+
+**2. Azure CI/CD Pipeline**
+The `.github/workflows/azure-ci.yml` handles the automated build and deployment process for Azure, pushing images to DockerHub and updating Kubernetes manifests to trigger ArgoCD syncs on AKS.
+
+**3. External Azure Infrastructure (Terraform)**
+The underlying AKS cluster, networking, and storage provisioning are managed via Terraform. For the complete infrastructure-as-code setup for Azure, refer to the following repository:
+👉 aks-app infrastructure
+
+**4. Automated TLS (Let's Encrypt)**
+Cert-manager is integrated via ArgoCD to handle the full lifecycle of SSL certificates:
+- **Issuer:** Namespaced Let's Encrypt production issuer using HTTP-01 challenges.
+- **Automation:** Ingress annotations trigger automatic certificate issuance and renewal.
+- **Persistence:** TLS secrets are automatically managed and injected into the Nginx pods.
+
+**5. Full Stack Observability**
+Monitoring is not just installed; it's integrated into the application lifecycle:
+- **ServiceMonitors:** Automated discovery of microservice metrics (Gateway, Auth, etc.).
+- **Grafana Sidecar:** Dashboard-as-Code implementation. Grafana automatically imports dashboards defined in Kubernetes `ConfigMaps` with specific labels.
+- **RED Method:** Dashboards focus on Rate, Errors, and Duration for the Boutique services.
+
+**6. Database Reliability**
+Handling stateful workloads in Kubernetes is tricky. This project solves common issues like:
+- **StatefulSets:** Using EBS-backed volumes for Postgres.
+- **Initialization:** A dedicated `db-restore` Job handles schema creation and seeding (Auth, Products, Orders, Users) to prevent race conditions during the initial volume mount.
+
+**7. GitOps Sync Waves**
+The App-of-Apps pattern uses sync waves to ensure dependencies (like CRDs from cert-manager and prometheus-operator) are healthy before the application layer attempts to deploy.
+
 ---
 
-### Part 4 — AIOps Integration
-[`projects/aiops-assistant/README.md`](projects/aiops-assistant/README.md)
+## TODO / Roadmap
 
-Finally, we explore how AI helps with:
+The following parts are planned for future updates to bridge the gap between DevOps and AI:
 
-- Monitoring and anomaly detection
-- Log analysis at scale
-- Incident response automation
-- DevOps troubleshooting
+**Part 4 — AIOps Integration:** Exploring how AI helps with monitoring, anomaly detection, log analysis, and incident response using AWS Bedrock Agents (Kira).
 
-Because modern DevOps is no longer just automation — it's **automation + intelligence**.
+**Log Forwarding:** Setting up AWS Fluent Bit to ship pod logs to CloudWatch for centralized analysis.
 
 ---
 
@@ -155,6 +188,3 @@ Once you implement the project:
 | CI/CD | GitHub Actions |
 | GitOps | ArgoCD + Kustomize |
 | Monitoring | Prometheus + Grafana |
-| Log Forwarding | AWS Fluent Bit → CloudWatch |
-| AIOps | AWS Bedrock Agent (Kira) |
-| AI Assistant | Claude Code + MCP Servers |
