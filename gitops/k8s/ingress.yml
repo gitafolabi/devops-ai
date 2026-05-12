@@ -10,9 +10,9 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: test.chellrach.com
+    http:
       paths:
-
       # API routes
       - path: /api(/|$)(.*)
         pathType: ImplementationSpecific
@@ -21,7 +21,6 @@ spec:
             name: gateway
             port:
               number: 3001
-
       # frontend routes (catch-all)
       - path: /(.*)
         pathType: ImplementationSpecific
