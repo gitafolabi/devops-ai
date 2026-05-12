@@ -15,7 +15,9 @@ spec:
         controller:
           service:
             type: LoadBalancer
-            loadBalancerIP: 48.199.136.246
+            annotations:
+              service.beta.kubernetes.io/azure-load-balancer-resource-group: crud-rg-nrg
+              service.beta.kubernetes.io/azure-pip-name: 1d10e028-afd2-4623-9630-794491c37684
 
   destination:
     server: https://kubernetes.default.svc
