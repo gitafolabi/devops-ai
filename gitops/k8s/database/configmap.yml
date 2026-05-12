@@ -55,8 +55,8 @@ data:
   quick-seed.sql: |
     \c products_db
     INSERT INTO products (name, description, price, category, image_url, stock_quantity) VALUES
-    ('Midnight Velvet Dress', 'Elegant evening wear for formal occasions.', 129.99, 'Women', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956', 50),
-    ('Urban Denim Jacket', 'Rugged and stylish denim jacket for everyday use.', 85.00, 'Men', 'https://images.unsplash.com/photo-1576905341935-4ef5090ea002', 30),
+    ('Midnight Velvet Dress', 'Elegant evening wear for formal occasions.', 129.99, 'Women', '/product-images/midnight-velvet.jpg', 50),
+    ('Urban Denim Jacket', 'Rugged and stylish denim jacket for everyday use.', 85.00, 'Men', '/product-images/denim-jacket.jpg', 30),
     ('Classic Leather Boots', 'Durable hand-crafted leather boots.', 150.00, 'Shoes', 'https://images.unsplash.com/photo-1520639889410-d04196f73176', 20),
     ('Silk Floral Scarf', 'Lightweight silk scarf with vibrant floral patterns.', 45.00, 'Accessories', 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d', 100),
     ('Slim-Fit Chinos', 'Premium cotton chinos in olive green.', 65.00, 'Men', 'https://images.unsplash.com/photo-1473966968600-fa804b86862b', 40),
