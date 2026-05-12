@@ -19,7 +19,7 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await query(
-      'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, role, created_at, updated_at',
+      'INSERT INTO users (email, password, password_hash, first_name, last_name, role) VALUES ($1, $2, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, role, created_at, updated_at',
       [email, hashedPassword, firstName, lastName, 'customer']
     );
 
@@ -65,7 +65,7 @@ router.post('/login', async (req, res) => {
         // Create demo user if doesn't exist
         const hashedPassword = await bcrypt.hash('demo', 10);
         const newUser = await query(
-          'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, role, created_at, updated_at',
+          'INSERT INTO users (email, password, password_hash, first_name, last_name, role) VALUES ($1, $2, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, role, created_at, updated_at',
           [email, hashedPassword, 'Demo', 'User', 'customer']
         );
         user = newUser.rows[0];
@@ -143,6 +143,26 @@ router.post('/login', async (req, res) => {
 router.post('/logout', (req, res) => {
   currentUser = null;
   res.json({ message: 'Logged out successfully' });
+});
+
+router.post('/refresh', async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken || refreshToken === 'undefined') {
+    return res.status(401).json({ error: 'Invalid refresh token' });
+  }
+
+  try {
+    const result = await query('SELECT id FROM users WHERE id = $1', [refreshToken]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+
+    res.json({ token: refreshToken, refreshToken });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.status(500).json({ error: 'Token refresh failed' });
+  }
 });
 
 router.get('/me', async (req, res) => {

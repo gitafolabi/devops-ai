@@ -13,6 +13,7 @@ type AuthAction =
   | { type: 'LOGIN_START' }
   | { type: 'LOGIN_SUCCESS'; payload: User }
   | { type: 'LOGIN_FAILURE'; payload: string }
+  | { type: 'AUTH_READY' }
   | { type: 'LOGOUT' }
   | { type: 'CLEAR_ERROR' };
 
@@ -31,6 +32,8 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return { ...state, user: action.payload, isAuthenticated: true, loading: false };
     case 'LOGIN_FAILURE':
       return { ...state, user: null, isAuthenticated: false, loading: false, error: action.payload };
+    case 'AUTH_READY':
+      return { ...state, loading: false };
     case 'LOGOUT':
       return { ...state, user: null, isAuthenticated: false, loading: false };
     case 'CLEAR_ERROR':
@@ -64,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           dispatch({ type: 'LOGIN_FAILURE', payload: 'Session expired' });
         }
       } else {
-        dispatch({ type: 'LOGIN_SUCCESS', payload: null as any });
+        dispatch({ type: 'AUTH_READY' });
       }
     };
 

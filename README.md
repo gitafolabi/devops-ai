@@ -19,7 +19,7 @@ In this series we will:
 - Build microservices locally
 - Use Claude and AI tools to assist development
 - Deploy everything step by step
-- Migrate the system to the cloud (Multi-cloud: AWS EKS & Azure AKS)
+- Migrate the system to the cloud (AWS EKS & Azure AKS)
 - Set up a full CI/CD pipeline with GitHub Actions
 - Implement GitOps workflows with ArgoCD
 
@@ -124,7 +124,7 @@ The `.github/workflows/azure-ci.yml` handles the automated build and deployment 
 
 **3. External Azure Infrastructure (Terraform)**
 The underlying AKS cluster, networking, and storage provisioning are managed via Terraform. For the complete infrastructure-as-code setup for Azure, refer to the following repository:
-👉 aks-app infrastructure
+👉 [aks-app infrastructure](https://github.com/gitafolabi/aks-app/tree/main/infrastructure)
 
 **4. Automated TLS (Let's Encrypt)**
 Cert-manager is integrated via ArgoCD to handle the full lifecycle of SSL certificates:

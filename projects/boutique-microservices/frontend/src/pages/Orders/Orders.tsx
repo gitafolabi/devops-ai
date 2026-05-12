@@ -220,12 +220,12 @@ const Orders: React.FC = () => {
                                       borderRadius: 1,
                                       objectFit: 'cover',
                                     }}
-                                    image={item.product.imageUrl}
-                                    alt={item.product.name}
+                                    image={item.product?.imageUrl || '/product-images/placeholder.jpg'}
+                                    alt={item.product?.name || 'Product'}
                                   />
                                 </ListItemIcon>
                                 <ListItemText
-                                  primary={item.product.name}
+                                  primary={item.product?.name || 'Product'}
                                   secondary={`Quantity: ${item.quantity} × $${typeof item.price === 'string' ? parseFloat(item.price).toFixed(2) : item.price.toFixed(2)}`}
                                   primaryTypographyProps={{ variant: 'subtitle2' }}
                                   secondaryTypographyProps={{ variant: 'body2' }}

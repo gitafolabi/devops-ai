@@ -102,12 +102,14 @@ export const productService = {
   },
 
   getByCategory: async (category: string): Promise<Product[]> => {
-    const response = await apiClient.get(`/products?category=${category}`);
-    return response.data;
+    const response = await apiClient.get(`/products?category=${encodeURIComponent(category)}`);
+    const apiResponse = response.data;
+    return apiResponse.data?.products || apiResponse;
   },
 
   search: async (query: string): Promise<Product[]> => {
-    const response = await apiClient.get(`/products/search?q=${query}`);
-    return response.data;
+    const response = await apiClient.get(`/products?search=${encodeURIComponent(query)}`);
+    const apiResponse = response.data;
+    return apiResponse.data?.products || apiResponse;
   },
 };

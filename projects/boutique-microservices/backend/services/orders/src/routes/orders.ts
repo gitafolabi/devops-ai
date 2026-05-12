@@ -8,8 +8,17 @@ const PRODUCTS_SERVICE_URL = process.env.PRODUCTS_SERVICE_URL || 'http://localho
 
 router.post('/', async (req, res) => {
   try {
-    // Demo mode - use a fixed user ID or get from request
-    const { items, shippingAddress, userId = 'demo-user-id' } = req.body as CreateOrderRequest & { userId?: string };
+    const authHeader = req.headers.authorization;
+    const tokenUserId = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    const { items, shippingAddress, userId = tokenUserId } = req.body as CreateOrderRequest & { userId?: string | null };
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Please log in before placing an order' });
+    }
+
+    if (!items?.length) {
+      return res.status(400).json({ success: false, error: 'Order must include at least one item' });
+    }
 
     let totalAmount = 0;
     const orderItems: any[] = [];
@@ -18,12 +27,20 @@ router.post('/', async (req, res) => {
       const productResponse = await axios.get(`${PRODUCTS_SERVICE_URL}/${item.productId}`);
       const product = productResponse.data.data;
 
-      totalAmount += product.price * item.quantity;
+      const price = Number(product.price);
+      totalAmount += price * item.quantity;
 
       orderItems.push({
         product_id: item.productId,
         quantity: item.quantity,
-        price: product.price
+        price,
+        product: {
+          id: product.id,
+          name: product.name,
+          price,
+          imageUrl: product.image_url,
+          category: product.category
+        }
       });
     }
 
@@ -55,9 +72,10 @@ router.post('/', async (req, res) => {
           orderId: order.id,
           productId: item.product_id,
           quantity: item.quantity,
-          price: item.price
+          price: item.price,
+          product: item.product
         })),
-        totalAmount: order.total_amount,
+        totalAmount: Number(order.total_amount),
         status: order.status,
         shippingAddress: shippingAddress,
         paymentStatus: order.payment_status,
@@ -75,19 +93,32 @@ router.post('/', async (req, res) => {
 
 router.get('/my-orders', async (req, res) => {
   try {
-    // Demo mode - use a fixed user ID or get from query
-    const userId = req.query.userId as string || 'demo-user-id';
+    const authHeader = req.headers.authorization;
+    const tokenUserId = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    const userId = req.query.userId as string || tokenUserId;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Please log in to view orders' });
+    }
 
     const result = await query(`
       SELECT o.*,
-             JSON_AGG(
+             COALESCE(JSON_AGG(
                JSON_BUILD_OBJECT(
                  'id', oi.id,
+                 'orderId', oi.order_id,
                  'productId', oi.product_id,
                  'quantity', oi.quantity,
-                 'price', oi.price
+                 'price', oi.price,
+                 'product', JSON_BUILD_OBJECT(
+                   'id', oi.product_id,
+                   'name', 'Product',
+                   'price', oi.price,
+                   'imageUrl', '/product-images/placeholder.jpg',
+                   'category', 'Boutique'
+                 )
                )
-             ) as items
+             ) FILTER (WHERE oi.id IS NOT NULL), '[]') as items
       FROM orders o
       LEFT JOIN order_items oi ON o.id = oi.order_id
       WHERE o.user_id = $1
@@ -97,13 +128,80 @@ router.get('/my-orders', async (req, res) => {
 
     const response: ServiceResponse<Order[]> = {
       success: true,
-      data: result.rows
+      data: result.rows.map((order: any) => ({
+        id: order.id,
+        userId: order.user_id,
+        items: order.items,
+        totalAmount: Number(order.total_amount),
+        status: order.status,
+        shippingAddress: order.shipping_address,
+        paymentStatus: order.payment_status,
+        createdAt: order.created_at,
+        updatedAt: order.updated_at
+      }))
     };
 
     res.json(response);
   } catch (error) {
     console.error('Get orders error:', error);
     res.status(500).json({ success: false, error: 'Failed to get orders' });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const tokenUserId = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    const { id } = req.params;
+
+    const result = await query(`
+      SELECT o.*,
+             COALESCE(JSON_AGG(
+               JSON_BUILD_OBJECT(
+                 'id', oi.id,
+                 'orderId', oi.order_id,
+                 'productId', oi.product_id,
+                 'quantity', oi.quantity,
+                 'price', oi.price,
+                 'product', JSON_BUILD_OBJECT(
+                   'id', oi.product_id,
+                   'name', 'Product',
+                   'price', oi.price,
+                   'imageUrl', '/product-images/placeholder.jpg',
+                   'category', 'Boutique'
+                 )
+               )
+             ) FILTER (WHERE oi.id IS NOT NULL), '[]') as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.id = $1 AND ($2::uuid IS NULL OR o.user_id = $2)
+      GROUP BY o.id, o.user_id, o.total_amount, o.status, o.shipping_address, o.payment_status, o.created_at, o.updated_at
+    `, [id, tokenUserId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
+    const order = result.rows[0];
+    const response: ServiceResponse<Order> = {
+      success: true,
+      data: {
+        id: order.id,
+        userId: order.user_id,
+        items: order.items,
+        totalAmount: Number(order.total_amount),
+        status: order.status,
+        shippingAddress: order.shipping_address,
+        paymentStatus: order.payment_status,
+        createdAt: order.created_at,
+        updatedAt: order.updated_at
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Get order error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get order' });
   }
 });
 

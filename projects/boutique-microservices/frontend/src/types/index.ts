@@ -42,6 +42,7 @@ export interface Order {
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   shippingAddress: Address;
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
   createdAt: string;
   updatedAt: string;
 }
