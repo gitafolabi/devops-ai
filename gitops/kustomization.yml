@@ -21,6 +21,7 @@ resources:
   - k8s/grafana-dashboard.yml
   - k8s/backend/service-monitor.yml
   - k8s/ingress.yml
+  - ingres-argo.yml
   - prometheus-crds-app.yml
 
 configMapGenerator:
