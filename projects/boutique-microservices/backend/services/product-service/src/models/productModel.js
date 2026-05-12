@@ -12,12 +12,12 @@ async function getAll() {
 }
 
 async function create(data) {
-  const { name, description, price, images } = data;
+  const { name, description, price, image_url } = data;
 
   const { rows } = await pool.query(
-    `INSERT INTO products(name, description, price, images)
+    `INSERT INTO products(name, description, price, image_url)
      VALUES ($1,$2,$3,$4) RETURNING *`,
-    [name, description, price, images]
+    [name, description, price, image_url]
   );
 
   return rows[0];
@@ -31,4 +31,3 @@ async function remove(id) {
 }
 
 module.exports = { init, getAll, create, remove };
-

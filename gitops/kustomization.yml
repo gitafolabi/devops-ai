@@ -26,10 +26,5 @@ resources:
   - prometheus-crds-app.yml
   - cert-manager-argo.yml
 
-configMapGenerator:
-  - name: boutique-db-dump
-    files:
-      - k8s/database/boutique_full.sql
-
 generatorOptions:
   disableNameSuffixHash: true
