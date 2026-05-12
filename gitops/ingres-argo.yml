@@ -18,6 +18,7 @@ spec:
             annotations:
               service.beta.kubernetes.io/azure-load-balancer-resource-group: crud-rg-nrg
               service.beta.kubernetes.io/azure-pip-name: 1d10e028-afd2-4623-9630-794491c37684
+              service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
 
   destination:
     server: https://kubernetes.default.svc
