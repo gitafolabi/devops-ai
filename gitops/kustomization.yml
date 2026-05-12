@@ -1,8 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: boutique
-
 resources:
   - namespace.yml
   - secrets.yml
@@ -22,7 +20,9 @@ resources:
   - k8s/backend/service-monitor.yml
   - k8s/ingress.yml
   - ingres-argo.yml
+  - cert-manager-clusterissuer.yml
   - prometheus-crds-app.yml
+  - cert-manager-argo.yml
 
 configMapGenerator:
   - name: boutique-db-dump
