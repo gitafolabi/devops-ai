@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: avurlerby/order-service:3811cf9700b35019bf526fbe9896546f408a73d2
+          image: avurlerby/order-service:7ff204922601b767a51fb600232cf087b39dba9f
           ports:
             - containerPort: 3004
           env:
