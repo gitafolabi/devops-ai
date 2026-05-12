@@ -19,6 +19,8 @@ resources:
   - k8s/grafana-dashboard.yml
   - k8s/backend/service-monitor.yml
   - k8s/ingress.yml
+  - k8s/monitoring-ingress.yml
+  - k8s/tools-ingress.yml
   - ingres-argo.yml
   - cert-manager-clusterissuer.yml
   - prometheus-crds-app.yml

@@ -1,33 +1,25 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: boutique-ingress
+  name: tools-ingress
   namespace: boutique
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - test.chellrach.com
-    secretName: boutique-tls
+    - rabbit.test.chellrach.com
+    secretName: rabbit-tls
   rules:
-  - host: test.chellrach.com
+  - host: rabbit.test.chellrach.com
     http:
       paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: gateway
-            port:
-              number: 3001
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: frontend
+            name: rabbitmq
             port:
-              number: 3000
+              number: 15672

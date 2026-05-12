@@ -1,33 +1,36 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: boutique-ingress
-  namespace: boutique
+  name: monitoring-ingress
+  namespace: monitoring
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - test.chellrach.com
-    secretName: boutique-tls
+    - grafana.test.chellrach.com
+    - alerts.test.chellrach.com
+    secretName: monitoring-tls
   rules:
-  - host: test.chellrach.com
+  - host: grafana.test.chellrach.com
     http:
       paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: gateway
-            port:
-              number: 3001
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: frontend
+            name: kube-prometheus-stack-grafana
             port:
-              number: 3000
+              number: 80
+  - host: alerts.test.chellrach.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: alertmanager-kube-prometheus-stack-alertmanager
+            port:
+              number: 9093
