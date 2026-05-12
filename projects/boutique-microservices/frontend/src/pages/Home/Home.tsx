@@ -3,16 +3,10 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
   Button,
   Box,
   Paper,
-  IconButton,
   Fade,
-  Slide,
 } from '@mui/material';
 import {
   ArrowForward as ArrowForwardIcon,
@@ -65,16 +59,21 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #1a1a1a 0%, #424242 100%)',
+          backgroundImage: 'linear-gradient(90deg, rgba(0,0,0,0.78), rgba(0,0,0,0.34)), url(https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1800&q=80)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           color: 'white',
+          minHeight: { xs: 560, md: 640 },
           py: { xs: 8, md: 12 },
           position: 'relative',
           overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 7 }}>
               <Fade in timeout={1000}>
                 <Box>
                   <Typography
@@ -84,11 +83,13 @@ const Home: React.FC = () => {
                       fontWeight: 700,
                       mb: 3,
                       fontSize: { xs: '2.5rem', md: '3.5rem' },
+                      color: 'white',
+                      maxWidth: 720,
                     }}
                   >
-                    Discover Timeless
+                    Boutique App
                     <Box component="span" sx={{ color: '#d4af37' }}>
-                      {' '}Elegance
+                      {' '}Curated Luxury
                     </Box>
                   </Typography>
                   <Typography
@@ -99,10 +100,11 @@ const Home: React.FC = () => {
                       lineHeight: 1.6,
                       fontWeight: 300,
                       opacity: 0.9,
+                      maxWidth: 620,
+                      color: 'rgba(255,255,255,0.9)',
                     }}
                   >
-                    Indulge in our curated collection of luxury products, 
-                    where sophistication meets exceptional quality.
+                    Shop a refined edit of apparel, accessories, shoes, jewelry, and bags selected for modern everyday elegance.
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <Button
@@ -143,36 +145,6 @@ const Home: React.FC = () => {
                   </Box>
                 </Box>
               </Fade>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Slide in timeout={1500} direction="right">
-                <Box
-                  sx={{
-                    height: { xs: 300, md: 400 },
-                    background: 'linear-gradient(45deg, #d4af37 0%, #f4e5c2 100%)',
-                    borderRadius: 4,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <Typography
-                    variant="h2"
-                    sx={{
-                      fontFamily: '"Playfair Display", serif',
-                      color: '#1a1a1a',
-                      textAlign: 'center',
-                      p: 4,
-                    }}
-                  >
-                    LUXURY
-                    <br />
-                    REDEFINED
-                  </Typography>
-                </Box>
-              </Slide>
             </Grid>
           </Grid>
         </Container>

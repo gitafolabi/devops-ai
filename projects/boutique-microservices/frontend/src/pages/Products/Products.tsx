@@ -3,12 +3,7 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
   Button,
-  TextField,
   Select,
   MenuItem,
   FormControl,
@@ -19,13 +14,16 @@ import {
   useMediaQuery,
   IconButton,
   Fab,
+  Paper,
+  Stack,
 } from '@mui/material';
 import {
   FilterList as FilterIcon,
   Close as CloseIcon,
-  Sort as SortIcon,
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
+  LocalShipping as ShippingIcon,
+  WorkspacePremium as PremiumIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { productService } from '../../services/productService';
@@ -49,24 +47,13 @@ const Products: React.FC = () => {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const { addItem } = useCart();
 
-  const categories = [
-    'clothing',
-    'accessories',
-    'shoes',
-    'bags',
-    'jewelry',
-  ];
+  const categories = Array.from(
+    new Set(products.map(product => product.category).filter(Boolean))
+  ).sort();
 
-  const brands = [
-    'Gucci',
-    'Prada',
-    'Louis Vuitton',
-    'Chanel',
-    'Hermès',
-    'Dior',
-    'Versace',
-    'Burberry',
-  ];
+  const brands = Array.from(
+    new Set(products.map(product => product.brand).filter(Boolean) as string[])
+  ).sort();
 
   const sizes = [
     'XS', 'S', 'M', 'L', 'XL', 'XXL',
@@ -84,7 +71,6 @@ const Products: React.FC = () => {
       console.log('[Products] Starting to load products...');
       try {
         const allProducts = await productService.getAll();
-        console.log('[Products] Products loaded:', allProducts.length, allProducts);
         setProducts(allProducts);
         setFilteredProducts(allProducts);
       } catch (error) {
@@ -103,8 +89,8 @@ const Products: React.FC = () => {
     if (searchQuery) {
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase())
+        (product.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.category || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -143,7 +129,7 @@ const Products: React.FC = () => {
 
     if (filters.brand && filters.brand.length > 0) {
       filtered = filtered.filter(product => 
-        filters.brand.includes(product.brand)
+        product.brand && filters.brand.includes(product.brand)
       );
     }
 
@@ -155,8 +141,8 @@ const Products: React.FC = () => {
     if (searchQuery) {
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase())
+        (product.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.category || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -190,17 +176,58 @@ const Products: React.FC = () => {
   }
 
   const maxPrice = Math.max(...products.map(p => p.price), 1000);
+  const inStockCount = products.filter(product => product.inventory > 0).length;
 
   const mainContent = (
     <Box sx={{ flexGrow: 1 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          All Products
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'} Found
-        </Typography>
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 4,
+          p: { xs: 3, md: 4 },
+          borderRadius: 2,
+          color: 'white',
+          backgroundImage: 'linear-gradient(90deg, rgba(0,0,0,0.82), rgba(0,0,0,0.35)), url(https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1600&q=80)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          minHeight: 240,
+          display: 'flex',
+          alignItems: 'flex-end',
+        }}
+      >
+        <Box>
+          <Typography variant="h3" component="h1" gutterBottom sx={{ color: 'white' }}>
+            Boutique Collection
+          </Typography>
+          <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.86)', maxWidth: 660 }}>
+            A curated edit of refined essentials, statement accessories, and polished wardrobe pieces.
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mt: 3, flexWrap: 'wrap', gap: 1 }}>
+            <Chip icon={<PremiumIcon />} label={`${products.length} curated pieces`} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.55)' }} variant="outlined" />
+            <Chip icon={<ShippingIcon />} label={`${inStockCount} ready to ship`} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.55)' }} variant="outlined" />
+          </Stack>
+        </Box>
+      </Paper>
+
+      <Box sx={{ mb: 3 }}>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Chip
+            label="All"
+            clickable
+            color="primary"
+            variant="outlined"
+            onClick={() => setFilteredProducts(products)}
+          />
+          {categories.slice(0, 8).map(category => (
+            <Chip
+              key={category}
+              label={category}
+              clickable
+              variant="outlined"
+              onClick={() => setFilteredProducts(products.filter(product => product.category === category))}
+            />
+          ))}
+        </Stack>
       </Box>
 
       {/* Search and Controls */}
@@ -252,6 +279,10 @@ const Products: React.FC = () => {
           </Button>
         )}
       </Box>
+
+      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>
+        Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+      </Typography>
 
       {/* Products Grid */}
       <Grid container spacing={viewMode === 'list' ? 2 : 4}>

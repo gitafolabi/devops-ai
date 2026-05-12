@@ -50,14 +50,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
       return product.imageUrl;
     }
     
-    // Fallback to placeholder image
-    return '/images/placeholder.svg';
+    return '/product-images/placeholder.jpg';
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.currentTarget;
-    // Try the local placeholder image
-    target.src = '/images/placeholder.svg';
+    target.src = '/product-images/placeholder.jpg';
     target.onerror = () => {
       // Ultimate fallback - use a data URI for a simple placeholder
       target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik04NSA3NUgxMTVWMTI1SDg1Vjc1WiIgZmlsbD0iI0QxRDFEMSIvPgo8Y2lyY2xlIGN4PSI5MCIgY3k9IjkwIiByPSI1IiBmaWxsPSIjOUExQTFIIi8+CjxwYXRoIGQ9Ik03NSAxMjVIMTI1VjE0MEg3NVYxMjVaIiBmaWxsPSIjQTFBMUExIi8+Cjwvc3ZnPgo=';
@@ -87,6 +85,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     ? { 
         display: 'flex', 
         height: 200,
+        borderRadius: 2,
+        overflow: 'hidden',
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
           transform: 'translateY(-4px)',
@@ -97,6 +97,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        borderRadius: 2,
+        overflow: 'hidden',
         transition: 'all 0.3s ease-in-out',
         '&:hover': {
           transform: 'translateY(-4px)',
@@ -110,7 +112,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         height: 200,
       }
     : {
-        height: 280,
+        height: 300,
         width: '100%',
         objectFit: 'cover',
       };
@@ -223,12 +225,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       <CardContent sx={{ flexGrow: 1, pb: 1 }}>
         <Box sx={{ mb: 1 }}>
-          <Chip
-            label={product.category}
-            size="small"
-            variant="outlined"
-            sx={{ fontSize: '0.7rem' }}
-          />
+          <Chip label={product.category || 'Collection'} size="small" variant="outlined" sx={{ fontSize: '0.7rem' }} />
         </Box>
         
         <Typography
@@ -259,7 +256,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             WebkitBoxOrient: 'vertical',
           }}
         >
-          {product.description}
+          {product.description || 'A refined piece selected for the modern boutique wardrobe.'}
         </Typography>
         
         {product.rating && renderRating(product.rating)}

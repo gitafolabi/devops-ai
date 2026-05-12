@@ -89,18 +89,54 @@ data:
 
   quick-seed.sql: |
     \c products_db
+
+    DELETE FROM products p
+    USING (
+      SELECT ctid, ROW_NUMBER() OVER (PARTITION BY name ORDER BY created_at, id) AS row_number
+      FROM products
+    ) duplicates
+    WHERE p.ctid = duplicates.ctid
+      AND duplicates.row_number > 1;
+
+    CREATE UNIQUE INDEX IF NOT EXISTS products_name_unique_idx ON products (name);
+
     INSERT INTO products (name, description, price, category, image_url, stock_quantity)
     SELECT name, description, price, category, image_url, stock_quantity
     FROM (VALUES
-    ('Midnight Velvet Dress', 'Elegant evening wear for formal occasions.', 129.99, 'Women', '/product-images/midnight-velvet.jpg', 50),
-    ('Urban Denim Jacket', 'Rugged and stylish denim jacket for everyday use.', 85.00, 'Men', '/product-images/denim-jacket.jpg', 30),
-    ('Classic Leather Boots', 'Durable hand-crafted leather boots.', 150.00, 'Shoes', 'https://images.unsplash.com/photo-1520639889410-d04196f73176', 20),
-    ('Silk Floral Scarf', 'Lightweight silk scarf with vibrant floral patterns.', 45.00, 'Accessories', 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d', 100),
-    ('Slim-Fit Chinos', 'Premium cotton chinos in olive green.', 65.00, 'Men', 'https://images.unsplash.com/photo-1473966968600-fa804b86862b', 40),
-    ('Cashmere Turtleneck', 'Ultra-soft grey cashmere sweater.', 120.00, 'Women', 'https://images.unsplash.com/photo-1583846717393-dc2412c95ed7', 25),
-    ('Aviator Sunglasses', 'Classic gold-rimmed polarized lenses.', 110.00, 'Accessories', 'https://images.unsplash.com/photo-1511499767390-903390e6fbc4', 60),
-    ('Minimalist Watch', 'Stainless steel watch with a black leather strap.', 180.00, 'Accessories', 'https://images.unsplash.com/photo-1524592094714-0f0654e20314', 15)
+    ('Midnight Velvet Dress', 'Elegant evening wear cut from plush velvet with a sculpted waist and graceful movement.', 329.00, 'Women', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=900&q=80', 18),
+    ('Pearl Satin Slip Dress', 'Bias-cut satin dress with pearl-tone luster for dinners, weddings, and polished evenings.', 289.00, 'Women', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80', 22),
+    ('Cashmere Turtleneck', 'Ultra-soft grey cashmere sweater with a relaxed luxury fit and year-round warmth.', 220.00, 'Women', 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=900&q=80', 28),
+    ('Tailored Wool Blazer', 'Sharp single-breasted blazer in a refined wool blend for elevated day-to-night styling.', 310.00, 'Women', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80', 16),
+    ('Silk Floral Scarf', 'Lightweight silk scarf with vibrant artwork, hand-rolled edges, and soft drape.', 95.00, 'Accessories', 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=900&q=80', 80),
+    ('Diamond Accent Necklace', 'Delicate gold necklace with a brilliant accent stone designed for everyday radiance.', 480.00, 'Jewelry', 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=900&q=80', 12),
+    ('Aviator Sunglasses', 'Classic gold-rimmed polarized sunglasses with a clean silhouette and premium lenses.', 140.00, 'Accessories', 'https://images.unsplash.com/photo-1511499767390-903390e6fbc4?auto=format&fit=crop&w=900&q=80', 55),
+    ('Minimalist Watch', 'Stainless steel watch with a black leather strap and a clean architectural dial.', 260.00, 'Accessories', 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=900&q=80', 20),
+    ('Italian Leather Tote', 'Structured full-grain leather tote with polished hardware and room for daily essentials.', 420.00, 'Bags', 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=900&q=80', 17),
+    ('Quilted Evening Clutch', 'Compact quilted clutch with chain detail for evening events and special occasions.', 195.00, 'Bags', 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80', 24),
+    ('Classic Leather Boots', 'Durable hand-crafted leather boots with a stacked heel and timeless profile.', 250.00, 'Shoes', 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=900&q=80', 20),
+    ('Designer Heeled Sandals', 'Elegant leather heeled sandals with a slim strap design and comfortable balance.', 215.00, 'Shoes', 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=900&q=80', 18),
+    ('Urban Denim Jacket', 'Rugged denim jacket with structured shoulders, premium wash, and everyday versatility.', 145.00, 'Men', 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=900&q=80', 30),
+    ('Slim-Fit Chinos', 'Premium cotton chinos in a clean tapered fit with refined stretch comfort.', 115.00, 'Men', 'https://images.unsplash.com/photo-1473966968600-fa804b86862b?auto=format&fit=crop&w=900&q=80', 40),
+    ('Merino Crew Sweater', 'Fine merino crewneck sweater with a soft hand feel and clean ribbed trim.', 165.00, 'Men', 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=80', 26),
+    ('Oxford Travel Shirt', 'Crisp cotton oxford shirt designed for easy care, sharp lines, and all-day comfort.', 120.00, 'Men', 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=80', 35),
+    ('Linen Resort Shirt', 'Breathable linen shirt with a relaxed collar and coastal summer texture.', 135.00, 'Men', 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=900&q=80', 32),
+    ('Suede Weekend Loafer', 'Soft suede loafer with a cushioned footbed and quiet luxury finish.', 230.00, 'Shoes', 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=900&q=80', 21),
+    ('Signature Leather Belt', 'Italian leather belt with a brushed buckle and polished edge finishing.', 90.00, 'Accessories', 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=80', 48),
+    ('Weekend Canvas Duffel', 'Durable canvas and leather duffel sized for short trips and polished travel.', 275.00, 'Bags', 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=80', 19),
+    ('Ceramic Hoop Earrings', 'Sculptural hoop earrings with a glazed ceramic finish and gold-tone fastening.', 125.00, 'Jewelry', 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=900&q=80', 34),
+    ('Rose Gold Bracelet', 'Refined rose-gold bracelet with a subtle clasp and delicate shine.', 175.00, 'Jewelry', 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=900&q=80', 27),
+    ('Silk Pajama Set', 'Relaxed silk pajama set with contrast piping and a fluid, lounge-ready fit.', 245.00, 'Women', 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=80', 14),
+    ('Cashmere Travel Wrap', 'Generous cashmere wrap for flights, evenings, and refined layering.', 295.00, 'Accessories', 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&w=900&q=80', 23),
+    ('Leather Card Holder', 'Slim leather card holder with precise stitching and compact daily storage.', 85.00, 'Accessories', 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=900&q=80', 60),
+    ('Cropped Trench Jacket', 'Modern cropped trench with storm flap details and water-resistant cotton blend.', 260.00, 'Women', 'https://images.unsplash.com/photo-1520975954732-35dd22299614?auto=format&fit=crop&w=900&q=80', 15),
+    ('Textured Knit Polo', 'Smart knit polo with breathable texture, ribbed collar, and soft structure.', 150.00, 'Men', 'https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?auto=format&fit=crop&w=900&q=80', 29),
+    ('Polished Chelsea Boot', 'Sleek Chelsea boot in burnished leather with a durable sole and clean profile.', 285.00, 'Shoes', 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&w=900&q=80', 16),
+    ('Structured Mini Bag', 'Compact structured mini bag with top handle, crossbody strap, and premium finish.', 340.00, 'Bags', 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=900&q=80', 13),
+    ('Ribbed Midi Dress', 'Refined ribbed knit midi dress with clean lines and an easy modern fit.', 210.00, 'Women', 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=900&q=80', 21)
     ) AS seed(name, description, price, category, image_url, stock_quantity)
-    WHERE NOT EXISTS (
-      SELECT 1 FROM products p WHERE p.name = seed.name
-    );
+    ON CONFLICT (name) DO UPDATE SET
+      description = EXCLUDED.description,
+      price = EXCLUDED.price,
+      category = EXCLUDED.category,
+      image_url = EXCLUDED.image_url,
+      stock_quantity = EXCLUDED.stock_quantity;

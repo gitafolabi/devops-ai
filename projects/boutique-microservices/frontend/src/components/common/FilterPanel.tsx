@@ -6,7 +6,6 @@ import {
   Typography,
   Slider,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Checkbox,
