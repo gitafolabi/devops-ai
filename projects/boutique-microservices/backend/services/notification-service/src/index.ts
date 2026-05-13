@@ -13,7 +13,7 @@ const QUEUES = {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const connectWithRetry = async (retries = 15, delayMs = 3000): Promise<amqp.Connection> => {
+const connectWithRetry = async (retries = 15, delayMs = 3000): Promise<amqp.ChannelModel> => {
   for (let i = 0; i < retries; i++) {
     try {
       const conn = await amqp.connect(RABBIT_URL);
@@ -28,7 +28,7 @@ const connectWithRetry = async (retries = 15, delayMs = 3000): Promise<amqp.Conn
 };
 
 const startConsumer = async (): Promise<void> => {
-  let connection: amqp.Connection;
+  let connection: amqp.ChannelModel;
 
   try {
     connection = await connectWithRetry();
@@ -37,7 +37,7 @@ const startConsumer = async (): Promise<void> => {
     process.exit(1);
   }
 
-  connection.on('error', (err) => {
+  connection.on('error', (err: Error) => {
     console.error('[Notification] RabbitMQ connection error:', err.message);
     setTimeout(startConsumer, 5000);
   });
@@ -53,7 +53,7 @@ const startConsumer = async (): Promise<void> => {
   await channel.assertQueue(QUEUES.USER_REGISTERED, { durable: true });
   await channel.assertQueue(QUEUES.ORDER_CREATED, { durable: true });
 
-  channel.consume(QUEUES.USER_REGISTERED, async (msg) => {
+  channel.consume(QUEUES.USER_REGISTERED, async (msg: amqp.ConsumeMessage | null) => {
     if (!msg) return;
     try {
       const { email, firstName } = JSON.parse(msg.content.toString());
@@ -65,7 +65,7 @@ const startConsumer = async (): Promise<void> => {
     }
   });
 
-  channel.consume(QUEUES.ORDER_CREATED, async (msg) => {
+  channel.consume(QUEUES.ORDER_CREATED, async (msg: amqp.ConsumeMessage | null) => {
     if (!msg) return;
     try {
       const { email, order } = JSON.parse(msg.content.toString());
