@@ -19,7 +19,7 @@ spec:
           command: ['sh', '-c', "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done"]
       containers:
         - name: notification-service
-          image: avurlerby/notification-service:latest
+          image: avurlerby/notification-service:12518e338feec557f5f9e02acdc5c99ebcd3bb25
           resources:
             requests:
               memory: "64Mi"
