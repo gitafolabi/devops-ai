@@ -7,6 +7,7 @@ import {
   Box,
   Paper,
   Fade,
+  Alert,
 } from '@mui/material';
 import {
   ArrowForward as ArrowForwardIcon,
@@ -25,17 +26,16 @@ import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { addItem } = useCart();
 
   useEffect(() => {
     const loadProducts = async () => {
-      console.log('[Home] Loading products...');
       try {
         const featuredProducts = await productService.getAll();
-        console.log('[Home] Got products:', featuredProducts.length);
         setProducts(featuredProducts.slice(0, 8));
-      } catch (error) {
-        console.error('[Home] Error loading products:', error);
+      } catch (err) {
+        setError('Unable to load products. Please try refreshing the page.');
       } finally {
         setLoading(false);
       }
@@ -242,6 +242,78 @@ const Home: React.FC = () => {
         </Box>
       </Container>
 
+      {/* Shop by Category */}
+      <Container maxWidth="lg">
+        <Box sx={{ py: 8 }}>
+          <Box sx={{ textAlign: 'center', mb: 5 }}>
+            <Typography variant="h4" component="h2" sx={{ fontFamily: '"Playfair Display", serif', mb: 1 }}>
+              Shop by Category
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Find your style across our curated collections
+            </Typography>
+          </Box>
+          <Grid container spacing={2}>
+            {[
+              { label: 'Women', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80' },
+              { label: 'Men', image: 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?auto=format&fit=crop&w=600&q=80' },
+              { label: 'Bags', image: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=600&q=80' },
+              { label: 'Shoes', image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=600&q=80' },
+              { label: 'Jewelry', image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80' },
+              { label: 'Accessories', image: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=600&q=80' },
+            ].map((cat) => (
+              <Grid size={{ xs: 6, sm: 4, md: 2 }} key={cat.label}>
+                <Box
+                  component="a"
+                  href={`/products?category=${cat.label}`}
+                  sx={{
+                    display: 'block',
+                    textDecoration: 'none',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    aspectRatio: '3/4',
+                    '&:hover img': { transform: 'scale(1.06)' },
+                    '&:hover .cat-label': { backgroundColor: 'rgba(212,175,55,0.9)' },
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={cat.image}
+                    alt={cat.label}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                      transition: 'transform 0.4s ease',
+                    }}
+                  />
+                  <Box
+                    className="cat-label"
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'rgba(26,26,26,0.72)',
+                      color: 'white',
+                      textAlign: 'center',
+                      py: 1.2,
+                      transition: 'background-color 0.3s ease',
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ letterSpacing: 2, textTransform: 'uppercase', fontWeight: 600, fontSize: '0.75rem' }}>
+                      {cat.label}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      </Container>
+
       {/* Featured Products Section */}
       <Box sx={{ backgroundColor: '#f8f8f8', py: 8 }} id="featured">
         <Container maxWidth="lg">
@@ -259,16 +331,20 @@ const Home: React.FC = () => {
             </Typography>
           </Box>
           
-          <Grid container spacing={4}>
-            {products.map((product) => (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={product.id}>
-                <ProductCard
-                  product={product}
-                  onAddToCart={addItem}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          {error ? (
+            <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>
+          ) : (
+            <Grid container spacing={4}>
+              {products.map((product) => (
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} key={product.id}>
+                  <ProductCard
+                    product={product}
+                    onAddToCart={addItem}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          )}
 
           <Box sx={{ textAlign: 'center', mt: 6 }}>
             <Button

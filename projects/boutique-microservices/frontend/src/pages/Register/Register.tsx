@@ -291,13 +291,13 @@ const Register: React.FC = () => {
                 label={
                   <Typography variant="body2">
                     I agree to the{' '}
-                    <Link to="/terms" color="primary">
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#d4af37' }}>
                       Terms and Conditions
-                    </Link>{' '}
+                    </a>{' '}
                     and{' '}
-                    <Link to="/privacy" color="primary">
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#d4af37' }}>
                       Privacy Policy
-                    </Link>
+                    </a>
                   </Typography>
                 }
               />

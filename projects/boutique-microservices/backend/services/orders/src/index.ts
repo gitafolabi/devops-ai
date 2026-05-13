@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 import { orderRoutes } from './routes/orders';
 import { connectDB } from './database/connection';
 import { metricsMiddleware, setupMetrics } from './metrics';
+import { initRabbitMQ } from './rabbitmq';
 
 dotenv.config({ path: './.env' });
 
@@ -29,6 +30,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 const startServer = async () => {
   try {
     await connectDB();
+    const RABBIT_URL = process.env.RABBIT_URL || 'amqp://guest:guest@localhost:5672';
+    initRabbitMQ(RABBIT_URL); // non-blocking — service starts even if RabbitMQ is unavailable
     app.listen(PORT, () => {
       console.log(`Orders service running on port ${PORT}`);
     });

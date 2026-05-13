@@ -22,6 +22,13 @@ spec:
           image: avurlerby/orders:7ff204922601b767a51fb600232cf087b39dba9f
           ports:
             - containerPort: 3005
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
           env:
             - name: NODE_ENV
               value: development

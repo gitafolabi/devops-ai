@@ -1,0 +1,24 @@
+{
+  "name": "notification-service",
+  "version": "1.0.0",
+  "description": "Email notification service for boutique application",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "nodemailer": "^6.9.7",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.4",
+    "@types/nodemailer": "^6.4.14",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.2.2",
+    "nodemon": "^3.0.2",
+    "ts-node": "^10.9.1"
+  }
+}

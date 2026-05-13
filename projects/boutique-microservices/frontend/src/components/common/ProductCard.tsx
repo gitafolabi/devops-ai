@@ -81,17 +81,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
     );
   };
 
-  const cardSx = variant === 'list' 
-    ? { 
-        display: 'flex', 
+  const cardSx = variant === 'list'
+    ? {
+        display: 'flex',
         height: 200,
         borderRadius: 2,
         overflow: 'hidden',
         transition: 'all 0.3s ease-in-out',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 4,
-        },
+        '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 },
       }
     : {
         height: '100%',
@@ -100,10 +97,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         borderRadius: 2,
         overflow: 'hidden',
         transition: 'all 0.3s ease-in-out',
+        cursor: 'pointer',
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 4,
+          transform: 'translateY(-6px)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
         },
+        '&:hover .card-image-overlay': { opacity: 1 },
+        '&:hover .card-image': { transform: 'scale(1.04)' },
       };
 
   const mediaSx = variant === 'list'
@@ -119,14 +119,50 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card sx={cardSx}>
-      <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden' }}>
         <CardMedia
           component="img"
-          sx={mediaSx}
+          className="card-image"
+          sx={{ ...mediaSx, transition: 'transform 0.4s ease' }}
           image={getImageSrc()}
           alt={product.name}
           onError={handleImageError}
         />
+
+        {/* Hover overlay with quick-add */}
+        {variant === 'grid' && !isOutOfStock && (
+          <Box
+            className="card-image-overlay"
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.45)',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              pb: 2.5,
+              opacity: 0,
+              transition: 'opacity 0.3s ease',
+            }}
+          >
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddToCartIcon />}
+              onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}
+              sx={{
+                backgroundColor: '#d4af37',
+                color: '#1a1a1a',
+                fontWeight: 700,
+                letterSpacing: 1,
+                px: 3,
+                '&:hover': { backgroundColor: '#b8941f' },
+              }}
+            >
+              Quick Add
+            </Button>
+          </Box>
+        )}
         
         {product.isNew && (
           <Chip

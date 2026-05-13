@@ -49,7 +49,7 @@ interface AuthContextType extends AuthState {
   clearError: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('refreshToken', response.refreshToken);
       dispatch({ type: 'LOGIN_SUCCESS', payload: response.user });
     } catch (error: any) {
-      dispatch({ type: 'LOGIN_FAILURE', payload: error.response?.data?.message || 'Login failed' });
+      dispatch({ type: 'LOGIN_FAILURE', payload: error.response?.data?.message || error.response?.data?.error || 'Login failed' });
     }
   };
 

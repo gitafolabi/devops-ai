@@ -68,17 +68,16 @@ const ProductDetail: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const { addItem } = useCart();
 
-  const relatedProducts: Product[] = []; // This would come from an API call
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const loadProduct = async () => {
       if (!id) return;
-      
+
       try {
         const productData = await productService.getById(id);
         setProduct(productData);
       } catch (error) {
-        console.error('Error loading product:', error);
         navigate('/products');
       } finally {
         setLoading(false);
@@ -87,6 +86,16 @@ const ProductDetail: React.FC = () => {
 
     loadProduct();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (product?.category) {
+      productService.getByCategory(product.category)
+        .then(products => {
+          setRelatedProducts(products.filter(p => p.id !== product.id).slice(0, 4));
+        })
+        .catch(() => {});
+    }
+  }, [product]);
 
   const handleAddToCart = () => {
     if (product) {

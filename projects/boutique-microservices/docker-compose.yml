@@ -95,8 +95,11 @@ services:
       - NODE_ENV=development
       - PORT=3002
       - DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/auth_db
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - boutique-network
@@ -158,8 +161,11 @@ services:
       - NODE_ENV=development
       - PORT=3005
       - DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/orders_db
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - boutique-network
@@ -179,6 +185,45 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/users_db
     depends_on:
       postgres:
+        condition: service_healthy
+    networks:
+      - boutique-network
+    restart: unless-stopped
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: boutique-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - boutique-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./backend/services/notification-service
+      dockerfile: Dockerfile
+    container_name: boutique-notifications
+    environment:
+      - NODE_ENV=development
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+    depends_on:
+      rabbitmq:
         condition: service_healthy
     networks:
       - boutique-network

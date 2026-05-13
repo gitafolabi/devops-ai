@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -26,6 +26,7 @@ import {
   WorkspacePremium as PremiumIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useLocation } from 'react-router-dom';
 import { productService } from '../../services/productService';
 import { Product } from '../../types';
 import { useCart } from '../../contexts/CartContext';
@@ -37,7 +38,9 @@ import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 const Products: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+  const location = useLocation();
+  const urlCategory = useMemo(() => new URLSearchParams(location.search).get('category') || '', [location.search]);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,13 +71,15 @@ const Products: React.FC = () => {
 
   useEffect(() => {
     const loadProducts = async () => {
-      console.log('[Products] Starting to load products...');
       try {
         const allProducts = await productService.getAll();
         setProducts(allProducts);
-        setFilteredProducts(allProducts);
-      } catch (error) {
-        console.error('[Products] Error loading products:', error);
+        const initial = urlCategory
+          ? allProducts.filter((p) => (p.category || '').toLowerCase() === urlCategory.toLowerCase())
+          : allProducts;
+        setFilteredProducts(initial);
+      } catch {
+        // products stay empty — UI shows empty state
       } finally {
         setLoading(false);
       }

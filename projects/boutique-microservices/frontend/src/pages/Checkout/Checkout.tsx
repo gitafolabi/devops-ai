@@ -71,7 +71,8 @@ const Checkout: React.FC = () => {
           quantity: item.quantity,
         })),
         shippingAddress,
-      });
+        email: user?.email,
+      } as any);
       clearCart();
       setSuccessOpen(true);
       setTimeout(() => navigate('/orders'), 900);

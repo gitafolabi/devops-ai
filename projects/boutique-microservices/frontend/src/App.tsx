@@ -15,6 +15,7 @@ import Register from './pages/Register/Register';
 import Profile from './pages/Profile/Profile';
 import Orders from './pages/Orders/Orders';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+import LegalPage from './pages/Legal/LegalPage';
 
 const theme = createTheme({
   palette: {
@@ -282,6 +283,8 @@ function App() {
                 />
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
+                <Route path="terms" element={<LegalPage type="terms" />} />
+                <Route path="privacy" element={<LegalPage type="privacy" />} />
                 <Route
                   path="profile"
                   element={

@@ -15,6 +15,7 @@ import {
   Breadcrumbs,
   Link,
   Avatar,
+  Alert,
   Divider,
   List,
   ListItem,
@@ -39,21 +40,24 @@ import {
 import { orderService } from '../../services/orderService';
 import { Order } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 
 const Orders: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addItem } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadOrders = async () => {
       try {
         const userOrders = await orderService.getUserOrders();
         setOrders(userOrders);
-      } catch (error) {
-        console.error('Error loading orders:', error);
+      } catch (err) {
+        setError('Failed to load orders. Please try refreshing the page.');
       } finally {
         setLoading(false);
       }
@@ -61,8 +65,30 @@ const Orders: React.FC = () => {
 
     if (user) {
       loadOrders();
+    } else {
+      setLoading(false);
     }
   }, [user]);
+
+  const handleReorder = (order: Order) => {
+    order.items.forEach(item => {
+      addItem({
+        id: item.productId,
+        name: item.product?.name || 'Product',
+        price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+        imageUrl: item.product?.imageUrl || '/product-images/placeholder.jpg',
+        category: item.product?.category || '',
+        inventory: 99,
+        description: '',
+        rating: 0,
+        reviewCount: 0,
+        isNew: false,
+        createdAt: '',
+        updatedAt: '',
+      });
+    });
+    navigate('/cart');
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -140,7 +166,11 @@ const Orders: React.FC = () => {
           {orders.length} {orders.length === 1 ? 'Order' : 'Orders'}
         </Typography>
 
-        {orders.length === 0 ? (
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
+        )}
+
+        {orders.length === 0 && !error ? (
           <Paper elevation={3} sx={{ p: 6, textAlign: 'center' }}>
             <Avatar sx={{ width: 80, height: 80, mx: 'auto', mb: 3, backgroundColor: '#f5f5f5' }}>
               <ShoppingBagIcon sx={{ fontSize: 40, color: '#999' }} />
@@ -266,6 +296,7 @@ const Orders: React.FC = () => {
                             size="small"
                             startIcon={<ReorderIcon />}
                             variant="contained"
+                            onClick={() => handleReorder(order)}
                           >
                             Reorder
                           </Button>

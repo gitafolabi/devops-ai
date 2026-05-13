@@ -19,6 +19,7 @@ jobs:
           - order-service
           - product-service
           - user-service
+          - notification-service
           - frontend
 
     steps:
@@ -68,7 +69,7 @@ jobs:
         run: |
           NEW_TAG=${{ github.sha }}
 
-          for SERVICE in auth gateway orders order-service product-service user-service; do
+          for SERVICE in auth gateway orders order-service product-service user-service notification-service; do
             MANIFEST="gitops/k8s/backend/${SERVICE}.yml"
             sed -i "s|${{ secrets.DOCKERHUB_USERNAME }}/${SERVICE}:.*|${{ secrets.DOCKERHUB_USERNAME }}/${SERVICE}:${NEW_TAG}|g" $MANIFEST
           done

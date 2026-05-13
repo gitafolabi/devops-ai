@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -24,15 +25,28 @@ import {
   LocationOn as LocationIcon,
   Edit as EditIcon,
   ShoppingBag as OrdersIcon,
-  Favorite as WishlistIcon,
-  CreditCard as PaymentIcon,
-  Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { orderService } from '../../services/orderService';
 
 const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [orderCount, setOrderCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      orderService.getUserOrders()
+        .then(orders => setOrderCount(orders.length))
+        .catch(() => setOrderCount(0));
+    }
+  }, [user]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   if (!user) {
     return (
@@ -51,14 +65,10 @@ const Profile: React.FC = () => {
 
   const menuItems = [
     { icon: <OrdersIcon />, label: 'Order History', path: '/orders' },
-    { icon: <WishlistIcon />, label: 'Wishlist', path: '/wishlist' },
-    { icon: <PaymentIcon />, label: 'Payment Methods', path: '/payment' },
-    { icon: <SettingsIcon />, label: 'Account Settings', path: '/settings' },
   ];
 
   const stats = [
-    { label: 'Total Orders', value: '12' },
-    { label: 'Wishlist Items', value: '8' },
+    { label: 'Total Orders', value: orderCount === null ? '...' : String(orderCount) },
     { label: 'Member Since', value: new Date(user.createdAt || Date.now()).toLocaleDateString() },
   ];
 
@@ -103,6 +113,7 @@ const Profile: React.FC = () => {
                 variant="outlined"
                 startIcon={<EditIcon />}
                 fullWidth
+                disabled
                 sx={{ mb: 2 }}
               >
                 Edit Profile
@@ -112,6 +123,7 @@ const Profile: React.FC = () => {
                 color="error"
                 startIcon={<LogoutIcon />}
                 fullWidth
+                onClick={handleLogout}
               >
                 Logout
               </Button>
@@ -125,7 +137,7 @@ const Profile: React.FC = () => {
               <Grid size={{ xs: 12 }}>
                 <Grid container spacing={2}>
                   {stats.map((stat, index) => (
-                    <Grid size={{ xs: 12, sm: 4 }} key={index}>
+                    <Grid size={{ xs: 12, sm: 6 }} key={index}>
                       <Card variant="outlined">
                         <CardContent sx={{ textAlign: 'center', py: 3 }}>
                           <Typography variant="h4" color="primary" gutterBottom>

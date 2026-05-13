@@ -2,6 +2,7 @@ import express from 'express';
 import axios from 'axios';
 import { query } from '../database/connection';
 import { Order, CreateOrderRequest, Address, ServiceResponse } from '../types';
+import { publishEvent } from '../rabbitmq';
 
 const router = express.Router();
 const PRODUCTS_SERVICE_URL = process.env.PRODUCTS_SERVICE_URL || 'http://localhost:3003';
@@ -85,6 +86,11 @@ router.post('/', async (req, res) => {
     };
 
     res.status(201).json(response);
+
+    const emailFromBody = (req.body as any).email;
+    if (emailFromBody) {
+      publishEvent('order.created', { email: emailFromBody, order: response.data });
+    }
   } catch (error) {
     console.error('Create order error:', error);
     res.status(500).json({ success: false, error: 'Failed to create order' });
@@ -205,10 +211,78 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/:id/invoice', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const tokenUserId = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!tokenUserId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { id } = req.params;
+
+    const result = await query(`
+      SELECT o.*,
+             COALESCE(JSON_AGG(
+               JSON_BUILD_OBJECT(
+                 'id', oi.id,
+                 'productId', oi.product_id,
+                 'quantity', oi.quantity,
+                 'price', oi.price
+               )
+             ) FILTER (WHERE oi.id IS NOT NULL), '[]') as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.id = $1 AND o.user_id = $2
+      GROUP BY o.id, o.user_id, o.total_amount, o.status, o.shipping_address, o.payment_status, o.created_at, o.updated_at
+    `, [id, tokenUserId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
+    const order = result.rows[0];
+    res.json({
+      success: true,
+      data: {
+        invoiceNumber: `INV-${order.id.slice(-8).toUpperCase()}`,
+        orderId: order.id,
+        date: order.created_at,
+        items: order.items,
+        totalAmount: Number(order.total_amount),
+        shippingAddress: order.shipping_address,
+        status: order.status,
+        paymentStatus: order.payment_status
+      }
+    });
+  } catch (error) {
+    console.error('Invoice error:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate invoice' });
+  }
+});
+
 router.patch('/:id/status', async (req, res) => {
   try {
+    const authHeader = req.headers.authorization;
+    const tokenUserId = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!tokenUserId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
     const { status } = req.body;
     const { id } = req.params;
+
+    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, error: `Status must be one of: ${validStatuses.join(', ')}` });
+    }
+
+    const existing = await query('SELECT id FROM orders WHERE id = $1', [id]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
 
     await query('UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [status, id]);
 

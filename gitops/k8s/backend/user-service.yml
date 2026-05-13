@@ -18,6 +18,13 @@ spec:
           image: avurlerby/user-service:7ff204922601b767a51fb600232cf087b39dba9f
           ports:
             - containerPort: 3006
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
           env:
             - name: NODE_ENV
               value: development
