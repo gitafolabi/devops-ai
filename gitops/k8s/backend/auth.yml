@@ -19,7 +19,7 @@ spec:
           command: ['sh', '-c', "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done"]
       containers:
         - name: auth
-          image: avurlerby/auth:12518e338feec557f5f9e02acdc5c99ebcd3bb25
+          image: avurlerby/auth:5bb4e34fbf0d061bd9ee473c7587671c6fd9e8b3
           ports:
             - containerPort: 3002
           resources:

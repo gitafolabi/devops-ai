@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: product-service
-          image: avurlerby/product-service:12518e338feec557f5f9e02acdc5c99ebcd3bb25
+          image: avurlerby/product-service:5bb4e34fbf0d061bd9ee473c7587671c6fd9e8b3
           ports:
             - containerPort: 3003
           resources:
