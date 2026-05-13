@@ -56,3 +56,9 @@ spec:
                   name: boutique-secrets
                   key: SMTP_PASS
                   optional: true
+            - name: EMAIL_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: boutique-secrets
+                  key: EMAIL_FROM
+                  optional: true
