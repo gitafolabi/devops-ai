@@ -13,15 +13,30 @@ spec:
       labels:
         app: order-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       initContainers:
         - name: wait-for-rabbitmq
           image: busybox:1.28
           command: ['sh', '-c', "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done"]
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: order-service
-          image: avurlerby/order-service:39fc95cc79377acd97f674f718a3fd1799b2b0d0
+          image: avurlerby/order-service:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
           ports:
             - containerPort: 3004
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: NODE_ENV
               value: development
@@ -37,7 +52,10 @@ spec:
             - name: PRODUCT_SERVICE_URL
               value: "http://product-service:3003"
             - name: RABBIT_URL
-              value: "amqp://guest:guest@rabbitmq:5672"
+              valueFrom:
+                secretKeyRef:
+                  name: boutique-secrets
+                  key: RABBIT_URL
 
 ---
 

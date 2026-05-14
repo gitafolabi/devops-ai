@@ -13,6 +13,9 @@ spec:
   - hosts:
     - rabbit.test.chellrach.com
     secretName: rabbit-tls
+  - hosts:
+    - jaeger.test.chellrach.com
+    secretName: jaeger-tls
   rules:
   - host: rabbit.test.chellrach.com
     http:
@@ -24,3 +27,13 @@ spec:
             name: rabbitmq
             port:
               number: 15672
+  - host: jaeger.test.chellrach.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jaeger
+            port:
+              number: 16686

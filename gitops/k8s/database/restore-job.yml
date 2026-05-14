@@ -8,6 +8,9 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
       containers:
         - name: restore
           image: postgres:15-alpine
@@ -26,6 +29,12 @@ spec:
               psql -h boutique-postgres -U postgres -f /dump/quick-seed.sql
 
               echo "Restore completed."
+          securityContext:
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: PGPASSWORD
               valueFrom:

@@ -13,9 +13,12 @@ spec:
       labels:
         app: gateway
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: gateway
-          image: avurlerby/gateway:39fc95cc79377acd97f674f718a3fd1799b2b0d0
+          image: avurlerby/gateway:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
           ports:
             - containerPort: 3001
           resources:
@@ -25,6 +28,12 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: NODE_ENV
               value: development
@@ -40,6 +49,8 @@ spec:
               value: "http://orders:3005"
             - name: USERS_SERVICE_URL
               value: "http://user-service:3006"
+            - name: OTLP_ENDPOINT
+              value: "http://jaeger:4318/v1/traces"
 ---
 apiVersion: v1
 kind: Service
@@ -52,9 +63,8 @@ spec:
   selector:
     app: gateway
   ports:
-    - name: http   
+    - name: http
       protocol: TCP
       port: 3001
       targetPort: 3001
   type: ClusterIP
-
