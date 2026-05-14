@@ -13,10 +13,19 @@ spec:
       labels:
         app: notification-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       initContainers:
         - name: wait-for-rabbitmq
           image: busybox:1.28
           command: ['sh', '-c', "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done"]
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: notification-service
           image: avurlerby/notification-service:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
@@ -27,6 +36,12 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "200m"
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: NODE_ENV
               value: production

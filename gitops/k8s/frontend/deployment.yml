@@ -13,6 +13,9 @@ spec:
       labels:
         app: frontend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: frontend
           image: avurlerby/frontend:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
@@ -25,6 +28,12 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "200m"
+          securityContext:
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: REACT_APP_API_URL
               value: "/api"

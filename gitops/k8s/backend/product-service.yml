@@ -13,6 +13,9 @@ spec:
       labels:
         app: product-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: product-service
           image: avurlerby/product-service:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
@@ -25,6 +28,12 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          securityContext:
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: NODE_ENV
               value: development

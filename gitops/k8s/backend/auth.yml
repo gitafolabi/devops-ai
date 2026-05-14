@@ -13,10 +13,19 @@ spec:
       labels:
         app: auth
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       initContainers:
         - name: wait-for-rabbitmq
           image: busybox:1.28
           command: ['sh', '-c', "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done"]
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       containers:
         - name: auth
           image: avurlerby/auth:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
@@ -29,6 +38,12 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "500m"
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: NODE_ENV
               value: development

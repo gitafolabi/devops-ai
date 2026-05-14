@@ -13,6 +13,9 @@ spec:
       labels:
         app: user-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: user-service
           image: avurlerby/user-service:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
@@ -25,6 +28,12 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "200m"
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: NODE_ENV
               value: development
@@ -36,7 +45,7 @@ spec:
                   name: boutique-secrets
                   key: USERS_DB_URL
 
---- 
+---
 
 apiVersion: v1
 kind: Service
