@@ -40,6 +40,8 @@ spec:
               value: "http://orders:3005"
             - name: USERS_SERVICE_URL
               value: "http://user-service:3006"
+            - name: OTLP_ENDPOINT
+              value: "http://jaeger:4318/v1/traces"
 ---
 apiVersion: v1
 kind: Service

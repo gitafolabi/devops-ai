@@ -15,6 +15,7 @@ resources:
   - k8s/backend/orders.yml
   - k8s/backend/user-service.yml
   - k8s/backend/rabbitmq.yml
+  - k8s/backend/jaeger.yml
   - k8s/backend/notification-service.yml
   - k8s/frontend/deployment.yml
   - k8s/hpa.yml

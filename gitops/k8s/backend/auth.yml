@@ -41,8 +41,10 @@ spec:
                   key: AUTH_DB_URL
             - name: RABBIT_URL
               value: "amqp://guest:guest@rabbitmq:5672"
+            - name: OTLP_ENDPOINT
+              value: "http://jaeger:4318/v1/traces"
 
---- 
+---
 
 apiVersion: v1
 kind: Service

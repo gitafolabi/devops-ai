@@ -35,6 +35,8 @@ spec:
                 secretKeyRef:
                   name: boutique-secrets
                   key: PRODUCTS_DB_URL
+            - name: OTLP_ENDPOINT
+              value: "http://jaeger:4318/v1/traces"
 
 ---
 

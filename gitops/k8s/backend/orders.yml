@@ -43,6 +43,8 @@ spec:
               value: "http://product-service:3003"
             - name: RABBIT_URL
               value: "amqp://guest:guest@rabbitmq:5672"
+            - name: OTLP_ENDPOINT
+              value: "http://jaeger:4318/v1/traces"
 
 ---
 
