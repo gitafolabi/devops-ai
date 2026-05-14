@@ -3,7 +3,8 @@ kind: Kustomization
 
 resources:
   - namespace.yml
-  - secrets.yml
+  - cluster-secret-store.yml
+  - external-secret.yml
   - k8s/database/configmap.yml
   - k8s/database/restore-job.yml
   - k8s/database/statefulset.yml

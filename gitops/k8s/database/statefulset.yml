@@ -16,8 +16,8 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999
-        fsGroup: 999
+        runAsUser: 70
+        fsGroup: 70
       containers:
         - name: postgres
           image: postgres:15-alpine
