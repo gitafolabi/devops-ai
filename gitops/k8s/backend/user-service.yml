@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: avurlerby/user-service:5bb4e34fbf0d061bd9ee473c7587671c6fd9e8b3
+          image: avurlerby/user-service:39fc95cc79377acd97f674f718a3fd1799b2b0d0
           ports:
             - containerPort: 3006
           resources:
