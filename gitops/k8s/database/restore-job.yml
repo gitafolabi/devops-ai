@@ -10,7 +10,7 @@ spec:
       restartPolicy: OnFailure
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999
+        runAsUser: 70
       containers:
         - name: restore
           image: postgres:15-alpine
