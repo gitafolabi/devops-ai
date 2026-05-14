@@ -184,6 +184,13 @@ def fetch_metrics(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json", status_code=400
         )
 
+    expected_prefix = f"/subscriptions/{SUBSCRIPTION_ID}/".lower()
+    if not resource_id.lower().startswith(expected_prefix):
+        return func.HttpResponse(
+            json.dumps({"status": "error", "message": "resource_id must belong to the configured subscription"}),
+            mimetype="application/json", status_code=403
+        )
+
     agg_map = {
         "Average": MetricAggregationType.AVERAGE,
         "Maximum": MetricAggregationType.MAXIMUM,
@@ -660,7 +667,12 @@ When answering questions:
 4. Suggest a remediation step if you identify a known issue pattern
 \"\"\"
 
+ALLOWED_FUNCTIONS = {"fetch_logs", "fetch_metrics", "fetch_service_health"}
+
+
 def call_azure_function(name: str, args: dict) -> str:
+    if name not in ALLOWED_FUNCTIONS:
+        return json.dumps({"status": "error", "message": f"Unknown function: {name}"})
     url = f"{FUNCTION_BASE_URL}/{name}?code={FUNCTION_KEY}"
     try:
         resp = requests.post(url, json=args, timeout=30)
