@@ -19,7 +19,7 @@ spec:
           command: ['sh', '-c', "until nc -zv rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done"]
       containers:
         - name: notification-service
-          image: avurlerby/notification-service:39fc95cc79377acd97f674f718a3fd1799b2b0d0
+          image: avurlerby/notification-service:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
           resources:
             requests:
               memory: "64Mi"
@@ -31,7 +31,10 @@ spec:
             - name: NODE_ENV
               value: production
             - name: RABBIT_URL
-              value: "amqp://guest:guest@rabbitmq:5672"
+              valueFrom:
+                secretKeyRef:
+                  name: boutique-secrets
+                  key: RABBIT_URL
             - name: SMTP_HOST
               valueFrom:
                 secretKeyRef:

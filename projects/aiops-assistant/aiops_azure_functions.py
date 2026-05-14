@@ -33,6 +33,7 @@ FETCH_LOGS_CODE = """
 import azure.functions as func
 import json
 import os
+import re
 from datetime import timedelta
 from azure.identity import DefaultAzureCredential
 from azure.monitor.query import LogsQueryClient, LogsQueryStatus
@@ -56,6 +57,21 @@ def fetch_logs(req: func.HttpRequest) -> func.HttpResponse:
     hours_back   = int(params.get("hours_back", 1))
     namespace    = params.get("namespace", "")
     limit        = int(params.get("limit", 50))
+
+    ALLOWED_TABLES = {"ContainerLog", "AzureDiagnostics", "AppServiceConsoleLogs", "KubeEvents", "SecurityEvent"}
+    if table not in ALLOWED_TABLES:
+        return func.HttpResponse(
+            json.dumps({"status": "error", "message": f"Invalid table. Allowed: {sorted(ALLOWED_TABLES)}"}),
+            mimetype="application/json", status_code=400
+        )
+    search_term = re.sub(r'[\"\'\\|;]', '', search_term)[:200]
+    if namespace and not re.match(r'^[a-zA-Z0-9-]+$', namespace):
+        return func.HttpResponse(
+            json.dumps({"status": "error", "message": "namespace must contain only alphanumeric characters and hyphens"}),
+            mimetype="application/json", status_code=400
+        )
+    limit = min(max(1, limit), 500)
+    hours_back = min(max(1, hours_back), 168)
 
     # Build KQL query — ContainerLog covers AKS pod stdout/stderr
     # CommonSecurityLog, AppServiceConsoleLogs, etc. for other sources
@@ -338,8 +354,11 @@ def fetch_service_health(req: func.HttpRequest) -> func.HttpResponse:
                 "fqdn": cluster.fqdn,
                 "agent_pools": agent_pools,
                 "deployments": deployments_health,
-                "all_healthy": all(d.get("healthy", False) for d in deployments_health
-                                   if "error" not in d),
+                "all_healthy": (
+                    bool(deployments_health)
+                    and not any("error" in d for d in deployments_health)
+                    and all(d.get("healthy", False) for d in deployments_health)
+                ),
             }
 
         except Exception as e:
@@ -640,9 +659,6 @@ When answering questions:
 3. Summarise findings in plain English — highlight unhealthy services clearly
 4. Suggest a remediation step if you identify a known issue pattern
 \"\"\"
-
-FUNCTION_DEFINITIONS = {json.dumps(FUNCTION_DEFINITIONS_PLACEHOLDER)}
-
 
 def call_azure_function(name: str, args: dict) -> str:
     url = f"{FUNCTION_BASE_URL}/{name}?code={FUNCTION_KEY}"

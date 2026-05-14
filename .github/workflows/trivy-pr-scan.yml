@@ -1,0 +1,22 @@
+name: Trivy Security Scan
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  trivy-config-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Misconfiguration Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          scan-ref: gitops/
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
