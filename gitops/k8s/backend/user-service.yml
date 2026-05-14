@@ -18,7 +18,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: user-service
-          image: avurlerby/user-service:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
+          image: avurlerby/user-service:84333b5a0924e97d29b02a6a34d81e434dd5bdab
           ports:
             - containerPort: 3006
           resources:

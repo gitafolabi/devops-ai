@@ -28,7 +28,7 @@ spec:
                 - ALL
       containers:
         - name: notification-service
-          image: avurlerby/notification-service:45431d60dc1d6e85ad7ee7f56ddbfd65d408b58b
+          image: avurlerby/notification-service:84333b5a0924e97d29b02a6a34d81e434dd5bdab
           resources:
             requests:
               memory: "64Mi"
