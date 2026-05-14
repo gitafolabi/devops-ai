@@ -14,10 +14,6 @@ spec:
       labels:
         app: postgres
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 70
-        fsGroup: 70
       containers:
         - name: postgres
           image: postgres:15-alpine

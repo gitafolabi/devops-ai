@@ -8,9 +8,6 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 70
       containers:
         - name: restore
           image: postgres:15-alpine
