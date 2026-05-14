@@ -16,7 +16,10 @@ const sdk = new NodeSDK({
   traceExporter: exporter,
   instrumentations: [
     getNodeAutoInstrumentations({
-      '@opentelemetry/instrumentation-http': { enabled: true },
+      '@opentelemetry/instrumentation-http': {
+        enabled: true,
+        ignoreIncomingRequestHook: (req: { url?: string }) => req.url === '/metrics',
+      },
       '@opentelemetry/instrumentation-express': { enabled: true },
     }),
   ],
