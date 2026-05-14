@@ -26,12 +26,6 @@ spec:
               psql -h boutique-postgres -U postgres -f /dump/quick-seed.sql
 
               echo "Restore completed."
-          securityContext:
-            readOnlyRootFilesystem: false
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
           env:
             - name: PGPASSWORD
               valueFrom:

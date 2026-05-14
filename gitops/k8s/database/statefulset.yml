@@ -26,12 +26,6 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
-          securityContext:
-            readOnlyRootFilesystem: false
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
           env:
             - name: POSTGRES_USER
               value: postgres
