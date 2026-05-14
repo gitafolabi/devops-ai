@@ -1,6 +1,6 @@
 # DevOps AI — Boutique Microservices Platform
 
-A production-grade microservices platform deployed on Azure Kubernetes Service, built to demonstrate real-world DevOps, SRE, and AI-assisted engineering practices end-to-end. The project covers everything from local Docker Compose development through Kubernetes deployment, GitOps automation, security hardening, full-stack observability, and AI-powered incident response.
+A production-grade microservices platform deployed on Kubernetes Service, built to demonstrate real-world DevOps, SRE, and AI-assisted engineering practices end-to-end. The project covers everything from local Docker Compose development through Kubernetes deployment, GitOps automation, security hardening, full-stack observability, and AI-powered incident response.
 
 ---
 
