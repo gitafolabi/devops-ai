@@ -1,4 +1,4 @@
-name: Boutique CI Pipeline
+name: Boutique CI Pipeline AWS
 
 on:
   workflow_dispatch:
