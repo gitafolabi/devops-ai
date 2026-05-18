@@ -232,6 +232,7 @@ To switch between cloud providers, swap two lines in `gitops/kustomization.yml` 
 - LogQL queries let you correlate logs with Prometheus metrics and Jaeger traces in a single view
 - 7-day retention configured; persistence disabled for testing (enable for production)
 
+
 ### Distributed Tracing — Jaeger + OpenTelemetry
 Four services are instrumented with the OpenTelemetry Node.js SDK:
 
