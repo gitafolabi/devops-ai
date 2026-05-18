@@ -322,7 +322,7 @@ docker compose up
 
 ---
 
-## What Was Improved
+## Platform Features
 
 | Area | What Changed |
 |------|-------------|
