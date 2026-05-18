@@ -21,11 +21,11 @@ spec:
             - containerPort: 5432
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "128Mi"  # prod: 256Mi
+              cpu: "100m"      # prod: 250m
             limits:
-              memory: "1Gi"
-              cpu: "500m"
+              memory: "256Mi"  # prod: 1Gi
+              cpu: "200m"      # prod: 500m
           env:
             - name: POSTGRES_USER
               value: postgres

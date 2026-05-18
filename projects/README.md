@@ -38,12 +38,12 @@ This guide walks through the full deployment of the boutique e-commerce applicat
      │    Auth     │              │Product Service│             │  User Service │
      │ (Port 3002) │              │  (Port 3003)  │             │  (Port 3006)  │
      └──────┬──────┘              └───────┬───────┘             └───────┬───────┘
-            │                             │
-     ┌──────▼──────┐              ┌───────▼───────┐
-     │Order Service│              │    Orders     │
-     │ (Port 3004) │              │  (Port 3005)  │
-     └──────┬──────┘              └───────────────┘
-            │
+            │                             │                             │
+     ┌──────▼──────┐              ┌───────▼───────┐             ┌───────▼───────────┐
+     │Order Service│              │    Orders     │             │  Notification     │
+     │ (Port 3004) │              │  (Port 3005)  │             │     Service       │
+     └──────┬──────┘              └───────────────┘             │  (RabbitMQ async) │
+            │                                                   └───────────────────┘
      ┌──────▼──────┐
      │  PostgreSQL │
      │ (Port 5432) │
@@ -64,6 +64,7 @@ This guide walks through the full deployment of the boutique e-commerce applicat
 | Order Service | 3004 | Cart and checkout |
 | Orders | 3005 | Order history and management |
 | User Service | 3006 | User profiles and account management |
+| Notification Service | — | Email dispatch via RabbitMQ consumer (Nodemailer/Resend) |
 | PostgreSQL | 5432 | Stores auth_db, products_db, orders_db, users_db |
 | Prometheus | 9090 | Metrics collection |
 | Grafana | 8080 | Metrics dashboards |
@@ -96,7 +97,7 @@ This builds all service images and starts containers for every service plus Post
 docker ps
 ```
 
-You should see containers for: `frontend`, `gateway`, `auth`, `product-service`, `order-service`, `orders`, `user-service`, `postgres`, `prometheus`, `grafana`.
+You should see containers for: `frontend`, `gateway`, `auth`, `product-service`, `order-service`, `orders`, `user-service`, `notification-service`, `postgres`, `prometheus`, `grafana`.
 
 ### Access the application
 
@@ -141,7 +142,7 @@ The Terraform configuration in `projects/Infrastructure/` provisions everything 
 | VPC | 3 public subnets across us-east-1a/b/c |
 | EKS Cluster | `eks-cluster`, Kubernetes 1.34 |
 | Node Group | `m7i-flex.large`, 1–2 nodes, on-demand |
-| ECR Repositories | One per service (7 total) |
+| ECR Repositories | One per service (8 total — includes notification-service) |
 | ArgoCD | Installed via Helm into `argocd` namespace |
 | Prometheus + Grafana | Installed via `kube-prometheus-stack` Helm chart into `monitoring` namespace |
 
@@ -274,7 +275,7 @@ The GitHub Actions pipeline (`.github/workflows/ci.yml`) automatically builds Do
 push to main
      │
      ▼
-build-and-push (7 parallel jobs)
+build-and-push (8 parallel jobs)
   └── For each service: docker build → docker push to ECR
      │
      ▼
@@ -324,7 +325,7 @@ git push origin main
 1. Go to your repo → **Actions** tab
 2. Click the latest **Boutique CI Pipeline** run
 3. You'll see two jobs:
-   - **build-and-push** — 7 parallel matrix jobs. Each builds and pushes one service image to ECR.
+   - **build-and-push** — 8 parallel matrix jobs. Each builds and pushes one service image to ECR.
    - **update-manifests** — runs after all builds succeed. Replaces image tags in `gitops/k8s/` and commits back.
 4. Click any job → expand any step to see full logs
 5. Green checkmark = success. Red X = failed — click the step to see the error.
@@ -457,7 +458,7 @@ sum by (pod) (container_memory_working_set_bytes{namespace="boutique"})
 kube_pod_container_status_restarts_total{namespace="boutique"}
 
 # Which services are up
-up{job=~"gateway|auth|product-service|order-service|orders|user-service"}
+up{job=~"gateway|auth|product-service|order-service|orders|user-service|notification-service"}
 
 # Node.js heap memory
 nodejs_heap_size_used_bytes
