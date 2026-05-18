@@ -339,15 +339,3 @@ docker compose up
 | **Frontend** | Revamped UI with React 19 + Material UI v7 |
 | **AIOps security** | Fixed KQL injection, IDOR, and unvalidated LLM tool call vulnerabilities |
 | **Node.js deprecations** | Migrated all GitHub Actions to Node.js 24 runtime |
-
----
-
-## Intentional Issues (Bonus Challenge)
-
-The repository includes intentional problems for learning purposes. See [projects/Issues.md](projects/Issues.md) for the full list.
-
-Once you've deployed the system:
-1. Fork this repository
-2. Deploy to your own AKS or EKS cluster
-3. Find and fix the issues
-4. Share what you learned
