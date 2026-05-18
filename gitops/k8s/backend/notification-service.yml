@@ -31,11 +31,11 @@ spec:
           image: avurlerby/notification-service:84333b5a0924e97d29b02a6a34d81e434dd5bdab
           resources:
             requests:
-              memory: "64Mi"
-              cpu: "50m"
+              memory: "32Mi"   # prod: 64Mi
+              cpu: "25m"       # prod: 50m
             limits:
-              memory: "128Mi"
-              cpu: "200m"
+              memory: "64Mi"   # prod: 128Mi
+              cpu: "50m"       # prod: 200m
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false

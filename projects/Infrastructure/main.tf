@@ -64,3 +64,13 @@ module "argocd" {
   depends_on = [module.eks]
 }
 
+module "secrets_manager" {
+  source = "./modules/secrets-manager"
+
+  cluster_name      = var.cluster_name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_issuer_url   = module.eks.oidc_issuer_url
+
+  depends_on = [module.eks]
+}
+

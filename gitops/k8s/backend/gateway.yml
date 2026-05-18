@@ -23,20 +23,31 @@ spec:
             - containerPort: 3001
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "100m"
+              memory: "64Mi"   # prod: 128Mi
+              cpu: "50m"       # prod: 100m
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "128Mi"  # prod: 512Mi
+              cpu: "100m"      # prod: 500m
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
+          livenessProbe:
+            tcpSocket:
+              port: 3001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 5
           env:
             - name: NODE_ENV
-              value: development
+              value: production
             - name: PORT
               value: "3001"
             - name: AUTH_SERVICE_URL
