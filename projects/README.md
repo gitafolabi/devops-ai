@@ -370,10 +370,12 @@ You should see `STATUS: Synced` and `HEALTH: Healthy` once the initial sync comp
 
 ### Access the ArgoCD UI
 
+ArgoCD is exposed via ingress at **https://argocd.test.chellrach.com** (TLS via cert-manager + Let's Encrypt).
+
+For local access without ingress:
 ```bash
 kubectl port-forward svc/argocd-server 8443:443 -n argocd &
 ```
-
 Open https://localhost:8443
 
 Get the admin password:
@@ -522,6 +524,53 @@ The dashboard has a **Service** dropdown variable at the top — use it to filte
 
 ---
 
+### Logs — Loki + Promtail
+
+Loki and Promtail are deployed via the `loki-stack` ArgoCD application into the `monitoring` namespace.
+
+**How it works:**
+- Promtail runs as a DaemonSet on every node, tailing logs from `/var/log/pods/`
+- Logs are shipped to Loki and indexed by pod labels (namespace, app, container)
+- A Grafana datasource ConfigMap (`gitops/k8s/loki-datasource.yml`) is auto-imported by the Grafana sidecar — no manual datasource setup needed
+
+**Querying logs in Grafana:**
+
+Open Grafana → Explore → select the **Loki** datasource.
+
+Useful LogQL queries:
+
+```logql
+# All logs from a specific service
+{namespace="boutique", app="gateway"}
+
+# Error logs across all boutique services
+{namespace="boutique"} |= "error"
+
+# Auth service login failures
+{namespace="boutique", app="auth"} |= "401"
+
+# All logs from a specific pod
+{namespace="boutique", pod="gateway-7d9f8b-xxxx"}
+
+# Filter by log level
+{namespace="boutique"} | json | level="error"
+```
+
+**Correlating with metrics:** In Grafana, use the **split view** to show Loki logs and Prometheus metrics side by side for the same time window. Click a spike in an error-rate graph and jump directly to the logs for that period.
+
+#### Access Loki (port-forward)
+
+```bash
+kubectl port-forward svc/loki-stack 3100:3100 -n monitoring &
+```
+
+Loki has no UI — access it through Grafana or via the HTTP API:
+```bash
+curl "http://localhost:3100/loki/api/v1/labels"
+```
+
+---
+
 ### Log Forwarding to CloudWatch (Optional)
 
 Install Fluent Bit to forward pod logs to CloudWatch:
@@ -560,6 +609,7 @@ kubectl port-forward svc/frontend 3000:3000 -n boutique &
 kubectl port-forward svc/gateway 3001:3001 -n boutique &
 kubectl port-forward svc/kube-prometheus-stack-prometheus 9090:9090 -n monitoring &
 kubectl port-forward svc/kube-prometheus-stack-grafana 8080:80 -n monitoring &
+kubectl port-forward svc/loki-stack 3100:3100 -n monitoring &
 kubectl port-forward svc/argocd-server 8443:443 -n argocd &
 ```
 
@@ -568,8 +618,9 @@ kubectl port-forward svc/argocd-server 8443:443 -n argocd &
 | Frontend | http://localhost:3000 |
 | Gateway / Metrics | http://localhost:3001/metrics |
 | Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:8080 |
-| ArgoCD | https://localhost:8443 |
+| Grafana (metrics + logs) | http://localhost:8080 — or https://grafana.test.chellrach.com |
+| Loki (API only) | http://localhost:3100 (no UI — access logs via Grafana) |
+| ArgoCD | https://localhost:8443 — or https://argocd.test.chellrach.com |
 
 ---
 
