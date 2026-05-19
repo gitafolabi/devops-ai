@@ -8,8 +8,8 @@ kind: Kustomization
 
 resources:
   - namespace.yml
-  - cluster-secret-store.yml
-  - external-secret.yml
+  - azure-cluster-secret-store.yml
+  - azure-external-secret.yml
   # AWS equivalents (uncomment and remove azure lines above for EKS deployments):
   # - aws-cluster-secret-store.yml
   # - aws-external-secret.yml
@@ -30,14 +30,18 @@ resources:
   - k8s/hpa.yml
   - k8s/pdb.yml
   - k8s/grafana-dashboard.yml
+  - k8s/loki-datasource.yml
   - k8s/backend/service-monitor.yml
   - k8s/ingress.yml
   - k8s/monitoring-ingress.yml
   - k8s/tools-ingress.yml
+  # ArgoCD ingress applied manually (not managed by kustomize):
+  # kubectl apply -f gitops/k8s/argocd-ingress.yml
   - ingres-argo.yml
   - cert-manager-clusterissuer.yml
   - prometheus-crds-app.yml
   - cert-manager-argo.yml
+  - loki.yml
 
 generatorOptions:
   disableNameSuffixHash: true

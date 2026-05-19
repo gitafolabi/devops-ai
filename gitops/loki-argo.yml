@@ -1,0 +1,54 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://grafana.github.io/helm-charts'
+    chart: loki-stack
+    targetRevision: 2.10.2
+    helm:
+      values: |
+        loki:
+          enabled: true
+          resources:
+            requests:
+              cpu: 50m      # prod: 250m
+              memory: 64Mi  # prod: 256Mi
+            limits:
+              cpu: 100m     # prod: 500m
+              memory: 128Mi # prod: 512Mi
+          persistence:
+            enabled: false  # prod: true, storageClassName: default, size: 10Gi
+          config:
+            table_manager:
+              retention_deletes_enabled: true
+              retention_period: 168h  # 7 days
+        promtail:
+          enabled: true
+          resources:
+            requests:
+              cpu: 25m      # prod: 50m
+              memory: 32Mi  # prod: 64Mi
+            limits:
+              cpu: 50m      # prod: 100m
+              memory: 64Mi  # prod: 128Mi
+        grafana:
+          enabled: false
+        prometheus:
+          enabled: false
+        fluent-bit:
+          enabled: false
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
