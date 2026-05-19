@@ -18,7 +18,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: gateway
-          image: avurlerby/gateway:84333b5a0924e97d29b02a6a34d81e434dd5bdab
+          image: avurlerby/gateway:c40bab802e48334bb404592840e5fef0b8f6b57d
           ports:
             - containerPort: 3001
           resources:
