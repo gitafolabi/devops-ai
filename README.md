@@ -66,8 +66,9 @@ An e-commerce boutique application decomposed into seven backend microservices a
 | Infrastructure | Terraform — AWS: VPC, EKS, ECR, Secrets Manager / Azure: VNet, AKS, ACR, Key Vault |
 | CI/CD | GitHub Actions |
 | GitOps | ArgoCD + Kustomize |
-| Observability | Prometheus, Grafana (RED method dashboards), Jaeger (distributed tracing) |
-| Tracing | OpenTelemetry SDK + OTLP HTTP → Jaeger |
+| Metrics | Prometheus + Grafana (RED method dashboards) |
+| Logging | Loki + Promtail (log aggregation, Grafana-native) |
+| Tracing | Jaeger + OpenTelemetry SDK (OTLP HTTP) |
 | Security scanning | Trivy (image CVE scan + K8s misconfiguration scan) |
 | Secrets management | External Secrets Operator (ESO) — Azure Key Vault (`crud-kv`) for AKS / AWS Secrets Manager (`boutique/*`) for EKS |
 | TLS | cert-manager + Let's Encrypt (HTTP-01 challenges) |
@@ -224,6 +225,13 @@ To switch between cloud providers, swap two lines in `gitops/kustomization.yml` 
 - Grafana dashboards provisioned as ConfigMaps (Dashboard-as-Code)
 - RED method dashboards: Rate, Errors, Duration per service
 
+### Logs — Loki + Promtail
+- Promtail runs as a DaemonSet, tailing all pod logs from `/var/log/pods/`
+- Loki aggregates and indexes logs by label (namespace, pod, container)
+- Grafana datasource provisioned automatically via ConfigMap — logs visible in the same Grafana instance as metrics
+- LogQL queries let you correlate logs with Prometheus metrics and Jaeger traces in a single view
+- 7-day retention configured; persistence disabled for testing (enable for production)
+
 ### Distributed Tracing — Jaeger + OpenTelemetry
 Four services are instrumented with the OpenTelemetry Node.js SDK:
 
@@ -240,7 +248,7 @@ Traces are exported via OTLP HTTP to `http://jaeger:4318/v1/traces`. Full cross-
 
 ## GitOps with ArgoCD
 
-ArgoCD watches this repository and syncs cluster state to `gitops/` — the same GitOps flow works identically on both AKS and EKS. Sync waves ensure dependencies deploy in order:
+ArgoCD is exposed at **https://argocd.test.chellrach.com** via nginx ingress with TLS from cert-manager. It watches this repository and syncs cluster state to `gitops/` — the same GitOps flow works identically on both AKS and EKS. Sync waves ensure dependencies deploy in order:
 
 1. CRDs (cert-manager, prometheus-operator)
 2. Infrastructure components (ESO, Ingress Nginx)
@@ -334,6 +342,7 @@ docker compose up
 | **Pod security** | `runAsNonRoot`, `readOnlyRootFilesystem`, `capabilities.drop: ALL` on all Node.js containers |
 | **NODE_ENV** | Fixed `development` → `production` on all service deployments |
 | **Resources** | Added missing `resources` block to `order-service`; all services have requests + limits |
+| **Logging** | Added Loki + Promtail — full log aggregation with Grafana-native datasource auto-provisioned |
 | **Tracing** | Added OpenTelemetry distributed tracing across 4 services with Jaeger backend |
 | **Security scanning** | Trivy image CVE gate in CI + Trivy config scan gate on every PR |
 | **Frontend** | Revamped UI with React 19 + Material UI v7 |

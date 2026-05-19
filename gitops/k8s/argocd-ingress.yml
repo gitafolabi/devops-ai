@@ -1,0 +1,30 @@
+# Applied manually — not managed by kustomization.
+# ArgoCD is provisioned separately (github.com/gitafolabi/aks-app/tree/main/argocd).
+# To apply: kubectl apply -f gitops/k8s/argocd-ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-ingress
+  namespace: argocd
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - argocd.test.chellrach.com
+    secretName: argocd-tls
+  rules:
+  - host: argocd.test.chellrach.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 443
