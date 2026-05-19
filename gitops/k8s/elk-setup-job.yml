@@ -1,0 +1,216 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: elk-setup
+  namespace: logging
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-elasticsearch
+          image: busybox:1.28
+          command:
+            - sh
+            - -c
+            - |
+              until wget -qO- http://elasticsearch-master:9200/_cluster/health 2>/dev/null; do
+                echo "Waiting for Elasticsearch..."
+                sleep 5
+              done
+              echo "Elasticsearch is ready"
+      containers:
+        - name: elk-setup
+          image: curlimages/curl:8.5.0
+          command:
+            - sh
+            - -c
+            - |
+              ES="http://elasticsearch-master:9200"
+
+              echo "=== Creating ILM policy: boutique-14d ==="
+              curl -sf -X PUT "$ES/_ilm/policy/boutique-14d" \
+                -H 'Content-Type: application/json' -d '{
+                  "policy": {
+                    "phases": {
+                      "hot": {
+                        "actions": {
+                          "rollover": {
+                            "max_age": "1d",
+                            "max_primary_shard_size": "5gb"
+                          }
+                        }
+                      },
+                      "delete": {
+                        "min_age": "14d",
+                        "actions": { "delete": {} }
+                      }
+                    }
+                  }
+                }'
+
+              echo "=== Creating component template: boutique-settings ==="
+              curl -sf -X PUT "$ES/_component_template/boutique-settings" \
+                -H 'Content-Type: application/json' -d '{
+                  "template": {
+                    "settings": {
+                      "index.lifecycle.name": "boutique-14d",
+                      "number_of_replicas": 1,
+                      "number_of_shards": 1
+                    }
+                  }
+                }'
+
+              echo "=== Creating component template: nginx-access-mappings ==="
+              curl -sf -X PUT "$ES/_component_template/nginx-access-mappings" \
+                -H 'Content-Type: application/json' -d '{
+                  "template": {
+                    "mappings": {
+                      "properties": {
+                        "client_ip":               { "type": "ip",      "ignore_malformed": true },
+                        "status_code":             { "type": "integer" },
+                        "bytes_sent":              { "type": "integer" },
+                        "request_length":          { "type": "integer" },
+                        "upstream_response_time":  { "type": "float" },
+                        "upstream_response_length":{ "type": "integer" },
+                        "upstream_time":           { "type": "float" },
+                        "upstream_status":         { "type": "integer" },
+                        "upstream_name":           { "type": "keyword" },
+                        "alt_upstream_name":       { "type": "keyword" },
+                        "upstream_addr":           { "type": "keyword" },
+                        "status_class":            { "type": "keyword" },
+                        "http_method":             { "type": "keyword" },
+                        "request_path":            { "type": "keyword" },
+                        "request_id":              { "type": "keyword" },
+                        "user_agent":              { "type": "keyword" },
+                        "referrer":                { "type": "keyword" }
+                      }
+                    }
+                  }
+                }'
+
+              echo "=== Creating component template: kubernetes-events-mappings ==="
+              curl -sf -X PUT "$ES/_component_template/kubernetes-events-mappings" \
+                -H 'Content-Type: application/json' -d '{
+                  "template": {
+                    "mappings": {
+                      "properties": {
+                        "type":    { "type": "keyword" },
+                        "reason":  { "type": "keyword" },
+                        "message": { "type": "text", "fields": { "keyword": { "type": "keyword", "ignore_above": 512 } } },
+                        "involvedObject": {
+                          "properties": {
+                            "kind":      { "type": "keyword" },
+                            "name":      { "type": "keyword" },
+                            "namespace": { "type": "keyword" },
+                            "uid":       { "type": "keyword" }
+                          }
+                        },
+                        "source": {
+                          "properties": {
+                            "component": { "type": "keyword" },
+                            "host":      { "type": "keyword" }
+                          }
+                        },
+                        "count":          { "type": "integer" },
+                        "firstTimestamp": { "type": "date" },
+                        "lastTimestamp":  { "type": "date" }
+                      }
+                    }
+                  }
+                }'
+
+              echo "=== Creating component template: boutique-app-mappings ==="
+              curl -sf -X PUT "$ES/_component_template/boutique-app-mappings" \
+                -H 'Content-Type: application/json' -d '{
+                  "template": {
+                    "mappings": {
+                      "properties": {
+                        "kubernetes": {
+                          "properties": {
+                            "pod_name":       { "type": "keyword" },
+                            "namespace_name": { "type": "keyword" },
+                            "container_name": { "type": "keyword" },
+                            "node_name":      { "type": "keyword" }
+                          }
+                        },
+                        "dataset": { "type": "keyword" },
+                        "stream":  { "type": "keyword" }
+                      }
+                    }
+                  }
+                }'
+
+              echo "=== Creating index templates for data streams ==="
+              curl -sf -X PUT "$ES/_index_template/logs-boutique.app" \
+                -H 'Content-Type: application/json' -d '{
+                  "index_patterns": ["logs-boutique.app-*"],
+                  "data_stream": {},
+                  "composed_of": ["boutique-settings", "boutique-app-mappings"],
+                  "priority": 200
+                }'
+              echo "  Created template for logs-boutique.app"
+
+              curl -sf -X PUT "$ES/_index_template/logs-nginx.access" \
+                -H 'Content-Type: application/json' -d '{
+                  "index_patterns": ["logs-nginx.access-*"],
+                  "data_stream": {},
+                  "composed_of": ["boutique-settings", "nginx-access-mappings"],
+                  "priority": 200
+                }'
+              echo "  Created template for logs-nginx.access"
+
+              curl -sf -X PUT "$ES/_index_template/logs-nginx.error" \
+                -H 'Content-Type: application/json' -d '{
+                  "index_patterns": ["logs-nginx.error-*"],
+                  "data_stream": {},
+                  "composed_of": ["boutique-settings"],
+                  "priority": 200
+                }'
+              echo "  Created template for logs-nginx.error"
+
+              curl -sf -X PUT "$ES/_index_template/logs-kubernetes.events" \
+                -H 'Content-Type: application/json' -d '{
+                  "index_patterns": ["logs-kubernetes.events-*"],
+                  "data_stream": {},
+                  "composed_of": ["boutique-settings", "kubernetes-events-mappings"],
+                  "priority": 200
+                }'
+              echo "  Created template for logs-kubernetes.events"
+
+              curl -sf -X PUT "$ES/_index_template/logs-monitoring.infra" \
+                -H 'Content-Type: application/json' -d '{
+                  "index_patterns": ["logs-monitoring.infra-*"],
+                  "data_stream": {},
+                  "composed_of": ["boutique-settings"],
+                  "priority": 200
+                }'
+              echo "  Created template for logs-monitoring.infra"
+
+              curl -sf -X PUT "$ES/_index_template/logs-kube.general" \
+                -H 'Content-Type: application/json' -d '{
+                  "index_patterns": ["logs-kube.general-*"],
+                  "data_stream": {},
+                  "composed_of": ["boutique-settings"],
+                  "priority": 200
+                }'
+              echo "  Created template for logs-kube.general"
+
+              echo "=== Bootstrapping data streams ==="
+              for STREAM in \
+                "logs-boutique.app-default" \
+                "logs-nginx.access-default" \
+                "logs-nginx.error-default" \
+                "logs-kubernetes.events-default" \
+                "logs-monitoring.infra-default" \
+                "logs-kube.general-default"; do
+                curl -sf -X PUT "$ES/_data_stream/$STREAM" || true
+                echo "  Bootstrapped $STREAM"
+              done
+
+              echo "=== ELK setup complete ==="
+              curl -s "$ES/_data_stream/logs-*?human" | grep -o '"name":"logs-[^"]*"'

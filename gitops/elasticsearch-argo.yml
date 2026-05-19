@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: elasticsearch
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://helm.elastic.co
+    chart: elasticsearch
+    targetRevision: 8.5.1
+    helm:
+      values: |
+        # 3-node cluster: quorum requires minimumMasterNodes = ceil(replicas/2)
+        replicas: 3
+        minimumMasterNodes: 2
+
+        esJavaOpts: "-Xmx2g -Xms2g"
+
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+
+        volumeClaimTemplate:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
+
+        esConfig:
+          elasticsearch.yml: |
+            xpack.security.enabled: false
+            xpack.security.transport.ssl.enabled: false
+            cluster.routing.allocation.disk.threshold_enabled: false
+
+        service:
+          type: ClusterIP
+
+        # Spread nodes across availability zones
+        antiAffinity: hard
+        podAnnotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
