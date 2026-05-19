@@ -1,5 +1,5 @@
-# Applied manually — not managed by kustomization.
-# ArgoCD is provisioned separately (github.com/gitafolabi/aks-app/tree/main/argocd).
+# Applied manually — not managed by kustomization.yml.
+# ArgoCD is provisioned separately: https://github.com/gitafolabi/aks-app/tree/main/argocd
 # To apply: kubectl apply -f gitops/k8s/argocd-ingress.yml
 apiVersion: networking.k8s.io/v1
 kind: Ingress

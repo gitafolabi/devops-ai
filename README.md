@@ -105,7 +105,8 @@ devops-ai/
 │   │   ├── database/                  # PostgreSQL StatefulSet + restore Job
 │   │   ├── frontend/                  # Frontend Deployment + Service
 │   │   ├── hpa.yml                    # HorizontalPodAutoscalers
-│   │   └── pdb.yml                    # PodDisruptionBudgets
+│   │   ├── pdb.yml                    # PodDisruptionBudgets
+│   │   └── loki-datasource.yml        # Grafana datasource for Loki (auto-imported)
 │   ├── argo-cd.yml                    # ArgoCD Application manifest
 │   ├── kustomization.yml              # Kustomize entry point
 │   ├── cluster-secret-store.yml       # ESO ClusterSecretStore → Azure Key Vault
@@ -114,6 +115,7 @@ devops-ai/
 │   ├── aws-external-secret.yml        # ExternalSecret for AWS deployments
 │   ├── ingress.yml                    # Ingress routes (boutique)
 │   ├── cert-manager-argo.yml          # cert-manager Helm App via ArgoCD
+│   ├── loki-argo.yml                  # Loki + Promtail Helm App via ArgoCD
 │   └── cert-manager-clusterissuer.yml # Let's Encrypt ClusterIssuer
 └── .github/
     └── workflows/
