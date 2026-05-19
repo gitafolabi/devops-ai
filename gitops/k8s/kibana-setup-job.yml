@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kibana-setup
+  namespace: logging
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: OnFailure
+      volumes:
+        - name: dashboards
+          configMap:
+            name: kibana-dashboards
+      initContainers:
+        - name: wait-for-kibana
+          image: busybox:1.28
+          command:
+            - sh
+            - -c
+            - |
+              until wget -qO- http://kibana-kibana:5601/api/status 2>/dev/null | grep -q '"level":"available"'; do
+                echo "Waiting for Kibana..."
+                sleep 5
+              done
+              echo "Kibana is ready"
+      containers:
+        - name: kibana-setup
+          image: curlimages/curl:8.5.0
+          volumeMounts:
+            - name: dashboards
+              mountPath: /dashboards
+          command:
+            - sh
+            - -c
+            - |
+              KIBANA="http://kibana-kibana:5601"
+
+              echo "=== Creating data views ==="
+              for PAYLOAD in \
+                '{"data_view":{"id":"logs-nginx-access","title":"logs-nginx.access-*","name":"Nginx Access Logs","timeFieldName":"@timestamp"}}' \
+                '{"data_view":{"id":"logs-nginx-error","title":"logs-nginx.error-*","name":"Nginx Error Logs","timeFieldName":"@timestamp"}}' \
+                '{"data_view":{"id":"logs-boutique-app","title":"logs-boutique.app-*","name":"Boutique App Logs","timeFieldName":"@timestamp"}}' \
+                '{"data_view":{"id":"logs-kubernetes-events","title":"logs-kubernetes.events-*","name":"Kubernetes Events","timeFieldName":"@timestamp"}}'; do
+                curl -sf -X POST "$KIBANA/api/data_views/data_view" \
+                  -H "kbn-xsrf: true" \
+                  -H "Content-Type: application/json" \
+                  -d "$PAYLOAD" || true
+              done
+
+              echo "=== Importing dashboards ==="
+              for FILE in /dashboards/*.ndjson; do
+                echo "Importing $FILE..."
+                curl -sf -X POST "$KIBANA/api/saved_objects/_import?overwrite=true" \
+                  -H "kbn-xsrf: true" \
+                  --form file=@"$FILE"
+                echo ""
+              done
+
+              echo "=== Kibana setup complete ==="
+              curl -s "$KIBANA/api/saved_objects/_find?type=dashboard" | grep -o '"title":"[^"]*"'

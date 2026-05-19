@@ -67,7 +67,7 @@ An e-commerce boutique application decomposed into seven backend microservices a
 | CI/CD | GitHub Actions |
 | GitOps | ArgoCD + Kustomize |
 | Metrics | Prometheus + Grafana (RED method dashboards) |
-| Logging | Loki + Promtail (log aggregation, Grafana-native) |
+| Logging | Loki + Promtail (Grafana-native, label-based, lightweight) + ELK Stack (Elasticsearch 8.5, Kibana, Fluent Bit, Logstash — full-text search, parsed fields, ILM, kube-events) |
 | Tracing | Jaeger + OpenTelemetry SDK (OTLP HTTP) |
 | Security scanning | Trivy (image CVE scan + K8s misconfiguration scan) |
 | Secrets management | External Secrets Operator (ESO) — Azure Key Vault (`crud-kv`) for AKS / AWS Secrets Manager (`boutique/*`) for EKS |
@@ -227,12 +227,62 @@ To switch between cloud providers, swap two lines in `gitops/kustomization.yml` 
 - Grafana dashboards provisioned as ConfigMaps (Dashboard-as-Code)
 - RED method dashboards: Rate, Errors, Duration per service
 
-### Logs — Loki + Promtail
+### Logs — Loki + Promtail and ELK Stack
+
+This project runs **both** logging stacks. They serve different purposes and are genuinely complementary rather than redundant.
+
+#### Loki + Promtail (deployed)
+
 - Promtail runs as a DaemonSet, tailing all pod logs from `/var/log/pods/`
-- Loki aggregates and indexes logs by label (namespace, pod, container)
-- Grafana datasource provisioned automatically via ConfigMap — logs visible in the same Grafana instance as metrics
-- LogQL queries let you correlate logs with Prometheus metrics and Jaeger traces in a single view
-- 7-day retention configured; persistence disabled for testing (enable for production)
+- Loki stores logs as compressed chunks indexed **only by labels** (namespace, pod, container, app) — it does not full-text index log content
+- Grafana datasource auto-provisioned via ConfigMap — logs appear in the same Grafana instance as Prometheus metrics and Jaeger traces
+- LogQL lets you correlate a log spike directly with a Prometheus rate or a Jaeger trace in a single panel
+- 7-day retention; persistence disabled for this environment (enable for production)
+
+#### ELK Stack — Elasticsearch + Kibana + Fluent Bit + Logstash (manifests ready, not deployed)
+
+- **Fluent Bit** runs as a DaemonSet collecting all pod logs and routing them by namespace into labelled datasets (`boutique.app`, `nginx.access`, `nginx.error`, `monitoring.infra`, `kube.general`)
+- **Logstash** parses each dataset: full nginx ingress grok (upstream fields, status codes, latency), JSON extraction for structured Node.js logs, status band classification (`2xx`/`3xx`/`4xx`/`5xx`)
+- **kubernetes-event-exporter** ships the Kubernetes Events API (Pod restarts, OOMKilled, BackOff, scheduling failures) directly to Elasticsearch as a separate `kubernetes.events` data stream
+- **Elasticsearch** stores everything with full-text indexing and explicit field mappings — numeric fields queryable with range filters, keyword fields usable in terms aggregations and percentile buckets
+- **Kibana** provides Lens dashboards (nginx traffic overview, app log volume/error rate, K8s events timeline) provisioned automatically via ArgoCD PostSync Job
+- ILM policy: daily rollover at 5 GB, automatic delete after 14 days across all 6 data streams
+
+---
+
+#### Loki vs ELK — comparison
+
+| | Loki + Promtail | ELK Stack |
+|--|--|--|
+| **Index model** | Label-only (no full-text index on log content) | Full-text index + explicit field mappings |
+| **Storage cost** | Very low — compressed log chunks | High — inverted indices for every field |
+| **Query language** | LogQL | KQL / Elasticsearch DSL |
+| **Field extraction** | At query time via regex (logfmt/json pipeline) | At ingest via Logstash grok/json filters |
+| **Dashboards** | Grafana panels alongside metrics and traces | Kibana Lens, Canvas, Maps |
+| **Kubernetes events** | Not captured natively | kubernetes-event-exporter → dedicated data stream |
+| **Retention management** | Manual TTL config | ILM — automatic rollover + delete policies |
+| **Resource footprint** | ~200 MB RAM total | ~8–12 GB RAM for a minimal 3-node ES cluster |
+| **Operational complexity** | Low — single binary, no parsing config | High — ES cluster tuning, Logstash pipelines, ILM policies |
+| **Startup time** | Seconds | Minutes (ES JVM warm-up) |
+
+---
+
+#### When to use each
+
+**Use Loki when:**
+- You need logs in the same Grafana view as Prometheus metrics and Jaeger traces — correlating a latency spike with a specific log line or trace span
+- Your primary log access pattern is "show me logs for this pod/namespace in the last 15 minutes"
+- You are operating a small-to-medium cluster and want lightweight, low-cost log aggregation
+- You filter by labels first, then grep the content — not the other way round
+
+**Use ELK when:**
+- You need to **search log content** across all pods without knowing which pod generated it (e.g. searching for a specific error string across all services)
+- You need **structured analytics**: top N upstream services by latency, P95 response times from nginx, error rate trends broken out by status band
+- You want to **capture and query Kubernetes Events** (OOMKilled, CrashLoopBackOff, scheduling failures) as searchable structured data alongside your application logs
+- You need **compliance or audit logging** with defined retention windows, immutable writes, and index lifecycle management
+- You have large log volumes where field-level aggregations need to be precomputed at ingest, not derived at query time
+
+**In this project:** Loki handles day-to-day log tailing and Grafana-native correlation. ELK (when deployed) handles nginx traffic analytics, Kubernetes event monitoring, and any investigation that requires searching log content rather than filtering by labels. The two stacks share no infrastructure — either can be used independently, and both can run simultaneously if resources allow.
 
 
 ### Distributed Tracing — Jaeger + OpenTelemetry
@@ -345,7 +395,8 @@ docker compose up
 | **Pod security** | `runAsNonRoot`, `readOnlyRootFilesystem`, `capabilities.drop: ALL` on all Node.js containers |
 | **NODE_ENV** | Fixed `development` → `production` on all service deployments |
 | **Resources** | Added missing `resources` block to `order-service`; all services have requests + limits |
-| **Logging** | Added Loki + Promtail — full log aggregation with Grafana-native datasource auto-provisioned |
+| **Logging (Loki)** | Added Loki + Promtail — lightweight label-based log aggregation with Grafana-native datasource auto-provisioned |
+| **Logging (ELK)** | Added ELK stack (Elasticsearch 3-node, Kibana, Fluent Bit, Logstash, kubernetes-event-exporter) — full-text indexing, parsed nginx fields, kube-events data stream, 14-day ILM, Kibana dashboards auto-imported via ArgoCD PostSync Job |
 | **Tracing** | Added OpenTelemetry distributed tracing across 4 services with Jaeger backend |
 | **Security scanning** | Trivy image CVE gate in CI + Trivy config scan gate on every PR |
 | **Frontend** | Revamped UI with React 19 + Material UI v7 |

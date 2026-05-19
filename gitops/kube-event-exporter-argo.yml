@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-event-exporter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: default
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: kubernetes-event-exporter
+    targetRevision: 3.0.0
+    helm:
+      values: |
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+        config:
+          logLevel: error
+          logFormat: json
+          maxEventAgeSeconds: 10
+
+          receivers:
+            - name: elasticsearch
+              elasticsearch:
+                hosts:
+                  - http://elasticsearch-master.logging:9200
+                # Data stream: logs-kubernetes.events-default
+                index: logs-kubernetes.events-default
+                indexFormat: "logs-kubernetes.events-{2006.01.02}"
+                dumpParseErrors: true
+                tls:
+                  insecureSkipVerify: true
+
+          route:
+            # Send all events — filter by type in Kibana
+            routes:
+              - match:
+                  - receiver: elasticsearch
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

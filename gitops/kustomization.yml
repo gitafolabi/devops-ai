@@ -42,6 +42,16 @@ resources:
   - prometheus-crds-app.yml
   - cert-manager-argo.yml
   - loki.yml
+  # ELK stack — commented out to avoid resource exhaustion; uncomment to deploy:
+  # - elasticsearch-argo.yml
+  # - logstash-argo.yml
+  # - kibana-argo.yml
+  # - fluentbit-argo.yml
+  # - kube-event-exporter-argo.yml
+  # - k8s/elk-setup-job.yml
+  # - k8s/kibana-ingress.yml
+  # - k8s/kibana-dashboards-cm.yml
+  # - k8s/kibana-setup-job.yml
 
 generatorOptions:
   disableNameSuffixHash: true

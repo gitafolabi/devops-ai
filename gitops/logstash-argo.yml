@@ -1,0 +1,161 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logstash
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://helm.elastic.co
+    chart: logstash
+    targetRevision: 8.5.1
+    helm:
+      values: |
+        replicas: 2
+
+        resources:
+          requests:
+            cpu: 200m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+
+        logstashJavaOpts: "-Xmx1g -Xms1g"
+
+        logstashConfig:
+          logstash.yml: |
+            http.host: "0.0.0.0"
+            xpack.monitoring.enabled: false
+
+        logstashPipeline:
+          logstash.conf: |
+            input {
+              # Receive forwarded logs from Fluent Bit
+              beats {
+                port => 24224
+              }
+            }
+
+            filter {
+              # ── Boutique application logs ──────────────────────────────
+              if [dataset] == "boutique.app" {
+                mutate {
+                  add_field => { "[@metadata][target_index]" => "logs-boutique.app-default" }
+                }
+                # Parse structured JSON logs from Node.js services
+                if [log] =~ /^\{/ {
+                  json {
+                    source => "log"
+                    target => "app"
+                    skip_on_invalid_json => true
+                  }
+                }
+              }
+
+              # ── Nginx ingress access logs (stdout) ─────────────────────
+              # Default nginx ingress controller log format:
+              # $remote_addr - $remote_user [$time_local] "$request" $status
+              # $body_bytes_sent "$http_referer" "$http_user_agent"
+              # $request_length $request_time
+              # [$proxy_upstream_name] [$proxy_alternative_upstream_name]
+              # $upstream_addr $upstream_response_length $upstream_response_time
+              # $upstream_status $req_id
+              else if [dataset] == "nginx.access" {
+                mutate {
+                  add_field => { "[@metadata][target_index]" => "logs-nginx.access-default" }
+                }
+                grok {
+                  match => {
+                    "log" => '%{IPORHOST:client_ip} - %{DATA:remote_user} \[%{HTTPDATE:request_time}\] "%{WORD:http_method} %{URIPATHPARAM:request_path} HTTP/%{NUMBER:http_version}" %{NUMBER:status_code} %{NUMBER:bytes_sent} "%{DATA:referrer}" "%{DATA:user_agent}" %{NUMBER:request_length} %{NUMBER:upstream_response_time} \[%{DATA:upstream_name}\] \[%{DATA:alt_upstream_name}\] %{DATA:upstream_addr} %{NUMBER:upstream_response_length} %{NUMBER:upstream_time} %{NUMBER:upstream_status} %{DATA:request_id}'
+                  }
+                  tag_on_failure => ["_grokparsefailure_nginx_access"]
+                }
+                mutate {
+                  convert => {
+                    "status_code"              => "integer"
+                    "bytes_sent"               => "integer"
+                    "request_length"           => "integer"
+                    "upstream_response_time"   => "float"
+                    "upstream_response_length" => "integer"
+                    "upstream_time"            => "float"
+                    "upstream_status"          => "integer"
+                  }
+                }
+                # Classify responses by status band for quick dashboard filtering
+                if [status_code] {
+                  if [status_code] >= 500 {
+                    mutate { add_field => { "status_class" => "5xx" } }
+                  } else if [status_code] >= 400 {
+                    mutate { add_field => { "status_class" => "4xx" } }
+                  } else if [status_code] >= 300 {
+                    mutate { add_field => { "status_class" => "3xx" } }
+                  } else {
+                    mutate { add_field => { "status_class" => "2xx" } }
+                  }
+                }
+              }
+
+              # ── Nginx ingress error logs (stderr) ──────────────────────
+              else if [dataset] == "nginx.error" {
+                mutate {
+                  add_field => { "[@metadata][target_index]" => "logs-nginx.error-default" }
+                }
+                grok {
+                  match => {
+                    "log" => '%{DATA:error_time} \[%{DATA:log_level}\] %{NUMBER:pid}#%{NUMBER:tid}: \*%{NUMBER:connection_id} %{GREEDYDATA:error_message}'
+                  }
+                  tag_on_failure => ["_grokparsefailure_nginx_error"]
+                }
+              }
+
+              # ── Monitoring infra logs ──────────────────────────────────
+              else if [dataset] == "monitoring.infra" {
+                mutate {
+                  add_field => { "[@metadata][target_index]" => "logs-monitoring.infra-default" }
+                }
+              }
+
+              # ── Fallback for untagged logs ─────────────────────────────
+              else {
+                mutate {
+                  add_field => { "[@metadata][target_index]" => "logs-kube.general-default" }
+                }
+              }
+
+              mutate {
+                remove_field => ["@version", "agent", "ecs"]
+              }
+            }
+
+            output {
+              elasticsearch {
+                hosts            => ["http://elasticsearch-master:9200"]
+                index            => "%{[@metadata][target_index]}"
+                action           => "create"
+              }
+            }
+
+        service:
+          ports:
+            - name: beats
+              port: 24224
+              protocol: TCP
+              targetPort: 24224
+
+        persistence:
+          enabled: true
+          size: 4Gi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
