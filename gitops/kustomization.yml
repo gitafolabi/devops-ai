@@ -31,7 +31,7 @@ resources:
   - k8s/pdb.yml
   - k8s/grafana-dashboard.yml
   - k8s/loki-datasource.yml
-  - k8s/backend/service-monitor.yml
+  # - k8s/backend/service-monitor.yml  # re-enable after Prometheus Operator CRDs are installed
   - k8s/ingress.yml
   - k8s/monitoring-ingress.yml
   - k8s/tools-ingress.yml
