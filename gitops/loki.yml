@@ -39,6 +39,9 @@ spec:
               memory: 64Mi 
         grafana:
           enabled: false
+          sidecar:
+            datasources:
+              isDefaultDatasource: false
         prometheus:
           enabled: false
         fluent-bit:
