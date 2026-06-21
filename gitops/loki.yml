@@ -49,6 +49,13 @@ spec:
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: monitoring
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: loki-stack
+      namespace: monitoring
+      jqPathExpressions:
+        - '.data["loki-stack-datasource.yaml"]'
   syncPolicy:
     automated:
       prune: true
