@@ -22,7 +22,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: kube-prometheus-stack-grafana
+            name: prometheus-operator-crds-grafana
             port:
               number: 80
   - host: alerts.test.chellrach.com
@@ -32,6 +32,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: kube-prometheus-stack-alertmanager
+            name: prometheus-operator-crds-k-alertmanager
             port:
               number: 9093
