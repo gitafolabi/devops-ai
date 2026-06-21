@@ -40,6 +40,7 @@ resources:
   - ingres-argo.yml
   - cert-manager-clusterissuer.yml
   - prometheus-crds-app.yml
+  - grafana-external-secret.yml
   - cert-manager-argo.yml
   - loki.yml
   # ELK stack — commented out to avoid resource exhaustion; uncomment to deploy:
