@@ -54,7 +54,9 @@ spec:
           enabled: true
           manageCrds: true
           admissionWebhooks:
-            enabled: false
+            enabled: true
+            certManager:
+              enabled: true
         nodeExporter:
           enabled: true
         kubeStateMetrics:
