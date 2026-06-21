@@ -25,6 +25,22 @@ spec:
             datasources:
               enabled: false
           additionalDataSources:
+            - name: Prometheus
+              type: prometheus
+              access: proxy
+              url: http://prometheus-operator-crds-k-prometheus.monitoring:9090
+              isDefault: true
+              jsonData:
+                httpMethod: POST
+                timeInterval: 30s
+            - name: Alertmanager
+              type: alertmanager
+              access: proxy
+              url: http://prometheus-operator-crds-k-alertmanager.monitoring:9093
+              isDefault: false
+              jsonData:
+                handleGrafanaManagedAlerts: false
+                implementation: prometheus
             - name: Loki
               type: loki
               access: proxy
