@@ -12,18 +12,21 @@ spec:
     helm:
       values: |
         prometheus:
-          enabled: false
+          enabled: true
         grafana:
-          enabled: false
+          enabled: true
+          adminPassword: admin
+          service:
+            type: ClusterIP
         alertmanager:
-          enabled: false
+          enabled: true
         prometheusOperator:
           enabled: true
           manageCrds: true
         nodeExporter:
-          enabled: false
+          enabled: true
         kubeStateMetrics:
-          enabled: false
+          enabled: true
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: monitoring
