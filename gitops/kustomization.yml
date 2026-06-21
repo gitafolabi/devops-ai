@@ -43,6 +43,7 @@ resources:
   - grafana-external-secret.yml
   - cert-manager-argo.yml
   - loki.yml
+  - promtail.yml
   # ELK stack — commented out to avoid resource exhaustion; uncomment to deploy:
   # - elasticsearch-argo.yml
   # - logstash-argo.yml
