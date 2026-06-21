@@ -21,7 +21,16 @@ spec:
             passwordKey: admin-password
           service:
             type: ClusterIP
+          sidecar:
+            datasources:
+              enabled: false
+              defaultDatasourceEnabled: false
           additionalDataSources:
+            - name: Prometheus
+              type: prometheus
+              access: proxy
+              url: http://prometheus-operated.monitoring:9090
+              isDefault: true
             - name: Loki
               type: loki
               access: proxy
@@ -29,9 +38,6 @@ spec:
               isDefault: false
               jsonData:
                 maxLines: 1000
-          sidecar:
-            datasources:
-              enabled: false
         alertmanager:
           enabled: true
         prometheusOperator:
