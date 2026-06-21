@@ -21,6 +21,17 @@ spec:
             passwordKey: admin-password
           service:
             type: ClusterIP
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki-stack.monitoring:3100
+              isDefault: false
+              jsonData:
+                maxLines: 1000
+          sidecar:
+            datasources:
+              enabled: false
         alertmanager:
           enabled: true
         prometheusOperator:
