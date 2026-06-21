@@ -23,7 +23,15 @@ spec:
             type: ClusterIP
           sidecar:
             datasources:
-              enabled: true
+              enabled: false
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki-stack.monitoring:3100
+              isDefault: false
+              jsonData:
+                maxLines: 1000
         alertmanager:
           enabled: true
         prometheusOperator:
