@@ -53,6 +53,8 @@ spec:
         prometheusOperator:
           enabled: true
           manageCrds: true
+          admissionWebhooks:
+            enabled: false
         nodeExporter:
           enabled: true
         kubeStateMetrics:
